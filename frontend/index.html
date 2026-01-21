@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="uk">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -8,91 +8,95 @@
 </head>
 <body>
 
+<!-- HERO -->
 <header class="hero">
-  <h1>Premium Fly Tire Shop</h1>
-  <p>Find the perfect tires for your car</p>
+  <h1>Fly Tire Shop</h1>
+  <p>Підбір шин для вашого авто</p>
 </header>
 
+<!-- FILTERS -->
 <section class="filters">
-    <select id="typeFilter">
-    <option value="auto">Авто</option>
-    <option value="moto">Мото</option>
-  </select>
-
-  <input type="text" id="searchInput" placeholder="Виробник">
+  <input
+    type="text"
+    id="searchInput"
+    placeholder="Бренд або модель">
 
   <select id="radiusFilter">
-  <option value="">Діаметр</option>
-  <option value="14">14</option>
-  <option value="15">15</option>
-  <option value="16">16</option>
-  <option value="17">17</option>
-  <option value="18">18</option>
-  <option value="19">19</option>
-  <option value="20">20</option>
-  <option value="21">21</option>
-  <option value="22">22</option>
-</select>
+    <option value="">Діаметр</option>
+    <option value="14">14</option>
+    <option value="15">15</option>
+    <option value="16">16</option>
+    <option value="17">17</option>
+    <option value="18">18</option>
+    <option value="19">19</option>
+    <option value="20">20</option>
+    <option value="21">21</option>
+    <option value="22">22</option>
+  </select>
 
   <select id="seasonFilter">
     <option value="">Сезон</option>
-    <option value="summer">Літо</option>
     <option value="winter">Зима</option>
-    <option value="all-season">Всесезонна</option>
+    <option value="summer">Літо</option>
+    <option value="all-season">Всесезонні</option>
   </select>
 </section>
 
-<section class="gallery" id="tireGallery"></section>
+<!-- GALLERY -->
+<section class="gallery" id="tireGallery">
+  <!-- JS renders tires here -->
+</section>
 
+<!-- CHECKOUT MODAL -->
 <div class="modal" id="checkoutModal">
   <div class="modal-content">
     <span class="close" id="closeModal">&times;</span>
-    <h2>Checkout</h2>
 
+    <h2>Оформлення замовлення</h2>
     <p id="selectedTire"></p>
 
     <form id="checkoutForm">
-      <input type="text" placeholder="Your name" required>
-      <input type="tel" placeholder="Phone number" required>
+      <input type="text" placeholder="Ваше імʼя" required>
+      <input type="tel" placeholder="Телефон" required>
       <button type="submit">Confirm Order</button>
     </form>
   </div>
 </div>
 
+<!-- FOOTER -->
 <footer class="footer">
   <div class="footer-container">
 
     <div class="footer-section">
       <h3>Контакти</h3>
-      <p>📞 <a href="tel:+380672357826"> +38 067 235 78 26</a></p>
+      <p>📞 <a href="tel:+380672357826">+38 067 235 78 26</a></p>
       <p>📧 <a href="mailto:stepanenko.fly@gmail.com">stepanenko.fly@gmail.com</a></p>
     </div>
 
     <div class="footer-section">
       <h3>Адреса</h3>
       <p>Воскресенський (Перова) бульвар, 19</p>
-      <p>Київ, 02218</p>
-      <p>
-  📍     <a 
-            href="https://www.google.com/maps/search/?api=1&query=Воскресенський+бульвар+19+Київ"
-            target="_blank">
-            Воскресенський (Перова) бульвар, 19
-        </a>
-    </p>
+      <p>Київ</p>
+      <a
+        href="https://www.google.com/maps/search/?api=1&query=Воскресенський+бульвар+19+Київ"
+        target="_blank">
+        📍 Відкрити на мапі
+      </a>
     </div>
 
     <div class="footer-section">
       <h3>Графік роботи</h3>
-      <p>Пн - Нд: 8:00 – 16:00</p>
+      <p>Пн – Нд: 8:00 – 16:00</p>
     </div>
 
   </div>
 
   <div class="footer-bottom">
-    © 2026 Fly Tire Shop. All rights reserved.
+    © 2026 Fly Tire Shop
   </div>
 </footer>
 
+<!-- SCRIPT -->
 <script type="module" src="script.js"></script>
 </body>
 </html>

@@ -19,14 +19,12 @@ const gallery = document.getElementById("tireGallery");
 const searchInput = document.getElementById("searchInput");
 const seasonFilter = document.getElementById("seasonFilter");
 const radiusFilter = document.getElementById("radiusFilter");
+
 const modal = document.getElementById("checkoutModal");
 const closeModal = document.getElementById("closeModal");
 const selectedTireText = document.getElementById("selectedTire");
 const checkoutForm = document.getElementById("checkoutForm");
-const sizeFilter = document.getElementById("sizeFilter");
-if (sizeFilter) {
-  sizeFilter.addEventListener("change", applyFilters);
-}
+
 /* ======================
    RENDER TIRES
 ====================== */
@@ -78,14 +76,14 @@ function renderTires(data) {
       card.className = "card";
 
       card.innerHTML = `
-  <img src="${tire.image}" alt="${tire.brand} ${tire.model}">
-  <div class="card-body">
-    <h3>${tire.brand} ${tire.model}</h3>
-    <p>Size: ${tire.width}/${tire.profile} R${tire.radius} ${tire.loadIndex}</p>
-    <p class="price">${tire.price || "—"}</p>
-    <p>In stock: ${tire.amount}</p>
-  </div>
-`;
+        <img src="${tire.image}" alt="${tire.brand} ${tire.model}">
+        <div class="card-body">
+          <h3>${tire.brand} ${tire.model}</h3>
+          <p>Size: ${tire.width}/${tire.profile} R${tire.radius} ${tire.loadIndex}</p>
+          <p class="price">${tire.price || "—"}</p>
+          <p>In stock: ${tire.amount}</p>
+        </div>
+      `;
 
       const buyBtn = document.createElement("button");
       buyBtn.className = "buy-btn";
@@ -106,9 +104,6 @@ function renderTires(data) {
     gallery.appendChild(list);
   });
 }
-
-
-
 
 /* ======================
    FILTERS
@@ -131,33 +126,32 @@ function applyFilters() {
   renderTires(filtered.length ? filtered : tires);
 }
 
-radiusFilter.addEventListener("change", applyFilters);
-
 /* ======================
    EVENTS
 ====================== */
 searchInput.addEventListener("input", applyFilters);
 seasonFilter.addEventListener("change", applyFilters);
-
-if (radiusFilter) {
-  radiusFilter.addEventListener("change", applyFilters);
-}
-
-if (sizeFilter) {
-  sizeFilter.addEventListener("change", applyFilters);
-}
+radiusFilter.addEventListener("change", applyFilters);
 
 /* ======================
    CHECKOUT MODAL
 ====================== */
 function openCheckout(tire) {
-  console.log("OPEN CHECKOUT", tire); // для перевірки
-
   selectedTireText.textContent =
     `${tire.brand} ${tire.model} — ${tire.price || "—"}`;
 
   modal.style.display = "flex";
 }
+
+closeModal.onclick = () => {
+  modal.style.display = "none";
+};
+
+window.onclick = e => {
+  if (e.target === modal) {
+    modal.style.display = "none";
+  }
+};
 
 checkoutForm.onsubmit = async e => {
   e.preventDefault();
@@ -187,7 +181,6 @@ checkoutForm.onsubmit = async e => {
     console.error(err);
   }
 };
-
 
 /* ======================
    INIT
