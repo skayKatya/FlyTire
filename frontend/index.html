@@ -16,13 +16,42 @@
 
 <!-- FILTERS -->
 <section class="filters">
-  <input
-    type="text"
-    id="searchInput"
-    placeholder="Бренд або модель">
+
+  <input id="searchInput" type="text" placeholder="🔍 Бренд або модель">
+
+  <select id="widthFilter">
+    <option value="">Ширина</option>
+    <option value="155">155</option>
+    <option value="165">165</option>
+    <option value="175">175</option>
+    <option value="185">185</option>
+    <option value="195">195</option>
+    <option value="205">205</option>
+    <option value="215">215</option>
+    <option value="225">225</option>
+    <option value="235">235</option>
+    <option value="245">245</option>
+    <option value="255">255</option>
+    <option value="265">265</option>
+    <option value="275">275</option>
+    <option value="285">285</option>
+  </select>
+
+  <select id="profileFilter">
+    <option value="">Профіль</option>
+    <option value="35">35</option>
+    <option value="40">40</option>
+    <option value="45">45</option>
+    <option value="50">50</option>
+    <option value="55">55</option>
+    <option value="60">60</option>
+    <option value="65">65</option>
+    <option value="70">70</option>
+    <option value="75">75</option>
+  </select>
 
   <select id="radiusFilter">
-    <option value="">Діаметр</option>
+    <option value="">R</option>
     <option value="14">14</option>
     <option value="15">15</option>
     <option value="16">16</option>
@@ -36,11 +65,30 @@
 
   <select id="seasonFilter">
     <option value="">Сезон</option>
-    <option value="winter">Зима</option>
-    <option value="summer">Літо</option>
-    <option value="all-season">Всесезонні</option>
+    <option value="winter">❄️ Зима</option>
+    <option value="summer">☀️ Літо</option>
+    <option value="all-season">🌿 Всесезонні</option>
   </select>
+
+  <input id="priceFrom" type="number" placeholder="Ціна від">
+  <input id="priceTo" type="number" placeholder="Ціна до">
+
+  <label class="in-stock">
+    <input type="checkbox" id="inStockFilter">
+    В наявності
+  </label>
+
+  <button id="applyFilters" class="apply-btn">
+    🔎 Підібрати
+  </button>
+
+  <button id="resetFilters" class="reset-btn">
+    🔄 Очистити
+  </button>
+
 </section>
+
+<p id="resultsCount" class="results-count"></p>
 
 <!-- GALLERY -->
 <section class="gallery" id="tireGallery">
