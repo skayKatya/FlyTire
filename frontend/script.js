@@ -108,23 +108,55 @@ function renderTires(data) {
 /* ======================
    FILTERS
 ====================== */
+const widthFilter = document.getElementById("widthFilter");
+const profileFilter = document.getElementById("profileFilter");
+const priceFrom = document.getElementById("priceFrom");
+const priceTo = document.getElementById("priceTo");
+const inStockFilter = document.getElementById("inStockFilter");
+const applyBtn = document.getElementById("applyFilters");
+const resetBtn = document.getElementById("resetFilters");
+const resultsCount = document.getElementById("resultsCount");
+
 function applyFilters() {
-  const searchValue = searchInput.value.toLowerCase();
-  const seasonValue = seasonFilter.value;
-  const radiusValue = radiusFilter.value;
+  const search = searchInput.value.toLowerCase();
+  const season = seasonFilter.value;
+  const radius = radiusFilter.value;
+  const width = widthFilter.value;
+  const profile = profileFilter.value;
+  const minPrice = Number(priceFrom.value);
+  const maxPrice = Number(priceTo.value);
+  const inStockOnly = inStockFilter.checked;
 
   const filtered = tires.filter(tire => {
     const title = `${tire.brand} ${tire.model}`.toLowerCase();
 
-    const matchesName = title.includes(searchValue);
-    const matchesSeason = !seasonValue || tire.season === seasonValue;
-    const matchesRadius = !radiusValue || tire.radius === Number(radiusValue);
+    if (search && !title.includes(search)) return false;
+    if (season && tire.season !== season) return false;
+    if (radius && tire.radius !== Number(radius)) return false;
+    if (width && tire.width !== Number(width)) return false;
+    if (profile && tire.profile !== Number(profile)) return false;
+    if (inStockOnly && tire.amount <= 0) return false;
 
-    return matchesName && matchesSeason && matchesRadius;
+    if (minPrice && tire.price < minPrice) return false;
+    if (maxPrice && tire.price > maxPrice) return false;
+
+    return true;
   });
 
-  renderTires(filtered.length ? filtered : tires);
+  resultsCount.textContent = `Знайдено шин: ${filtered.length}`;
+  renderTires(filtered);
 }
+
+applyBtn.addEventListener("click", applyFilters);
+
+resetBtn.addEventListener("click", () => {
+  document.querySelectorAll(".filters input, .filters select")
+    .forEach(el => el.value = "");
+  inStockFilter.checked = false;
+  resultsCount.textContent = "";
+  renderTires(tires);
+});
+
 
 /* ======================
    EVENTS
