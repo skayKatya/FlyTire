@@ -96,18 +96,59 @@
 </section>
 
 <!-- CHECKOUT MODAL -->
+<!-- CHECKOUT MODAL -->
 <div class="modal" id="checkoutModal">
   <div class="modal-content">
-    <span class="close" id="closeModal">&times;</span>
+    <button class="close" id="closeModal" type="button">×</button>
 
     <h2>Оформлення замовлення</h2>
-    <p id="selectedTire"></p>
 
-    <form id="checkoutForm">
-      <input type="text" placeholder="Ваше імʼя" required>
-      <input type="tel" placeholder="Телефон" required>
-      <input name="quantity" type="number" min="1" step="1" placeholder="Кількість" required>
-      <button type="submit">Confirm Order</button>
+    <div class="order-summary">
+      <div class="summary-row">
+        <span class="label">Шина:</span>
+        <span class="value" id="summaryTire">—</span>
+      </div>
+
+      <div class="summary-row">
+        <span class="label">Розмір:</span>
+        <span class="value" id="summarySize">—</span>
+      </div>
+
+      <div class="summary-row">
+        <span class="label">Ціна за 1 шт:</span>
+        <span class="value" id="summaryPrice">—</span>
+      </div>
+
+      <div class="summary-row">
+        <span class="label">В наявності:</span>
+        <span class="value" id="summaryAvailable">—</span>
+      </div>
+    </div>
+
+    <form id="checkoutForm" class="checkout-form">
+      <label class="field">
+        <span>Кількість</span>
+        <input name="quantity" type="number" min="1" step="1" required />
+      </label>
+
+      <label class="field">
+        <span>Ваше імʼя</span>
+        <input name="name" type="text" placeholder="Напр. Катя" required />
+      </label>
+
+      <label class="field">
+        <span>Телефон</span>
+        <input name="phone" type="tel" placeholder="+380..." required />
+      </label>
+
+      <div class="totals">
+        <div class="totals-row">
+          <span>Сума за вибрану кількість:</span>
+          <strong id="summaryTotal">—</strong>
+        </div>
+      </div>
+
+      <button type="submit" class="confirm-btn">✅ Підтвердити замовлення</button>
     </form>
   </div>
 </div>

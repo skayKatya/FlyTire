@@ -178,31 +178,91 @@ radiusFilter.addEventListener("change", applyFilters);
 ====================== */
 let selectedTire = null;
 
+const summaryTire = document.getElementById("summaryTire");
+const summarySize = document.getElementById("summarySize");
+const summaryPrice = document.getElementById("summaryPrice");
+const summaryAvailable = document.getElementById("summaryAvailable");
+const summaryTotal = document.getElementById("summaryTotal");
+
+const qtyInput = checkoutForm.querySelector('input[name="quantity"]');
+const nameInput = checkoutForm.querySelector('input[name="name"]');
+const phoneInput = checkoutForm.querySelector('input[name="phone"]');
+
+function calcAvailable(tire) {
+  return (tire.stock ?? 0) + (tire.showroom ?? 0) + (tire.basement ?? 0);
+}
+
+function formatMoney(value) {
+  const n = Number(value);
+  if (!Number.isFinite(n)) return "—";
+  return `${n.toFixed(2)} $`;
+}
+
+function updateTotalUI() {
+  if (!selectedTire) {
+    summaryTotal.textContent = "—";
+    return;
+  }
+
+  const quantity = Number(qtyInput.value);
+  const price = Number(selectedTire.price ?? 0);
+
+  if (!Number.isFinite(quantity) || quantity <= 0) {
+    summaryTotal.textContent = "—";
+    return;
+  }
+
+  summaryTotal.textContent = formatMoney(price * quantity);
+}
+
 function openCheckout(tire) {
   selectedTire = tire;
 
-  selectedTireText.textContent =
-    `${tire.brand} ${tire.model} — ${tire.price ?? "—"} $`;
+  const available = calcAvailable(tire);
 
-  // (опційно) підставимо максимальну к-сть по наявності
-  const qtyInput = checkoutForm.querySelector('input[name="quantity"]') 
-    || checkoutForm.querySelector('input[type="number"]');
+  summaryTire.textContent = `${tire.brand} ${tire.model}`;
+  summarySize.textContent = `${tire.width}/${tire.profile} R${tire.radius} ${tire.loadIndex ?? ""}`.trim();
+  summaryPrice.textContent = formatMoney(tire.price);
+  summaryAvailable.textContent = `${available} шт.`;
 
-  if (qtyInput) {
-    const maxQty = (tire.stock ?? 0) + (tire.showroom ?? 0);
-    qtyInput.max = maxQty;
-    qtyInput.value = maxQty > 0 ? 1 : 0;
-  }
+  // налаштування кількості
+  qtyInput.min = "1";
+  qtyInput.max = String(available);
+  qtyInput.value = available > 0 ? "1" : "0";
+  qtyInput.disabled = available <= 0;
+
+  updateTotalUI();
 
   modal.style.display = "flex";
 }
 
+qtyInput.addEventListener("input", () => {
+  // не даємо вийти за max
+  if (!selectedTire) return;
+
+  const available = calcAvailable(selectedTire);
+  let q = Number(qtyInput.value);
+
+  if (!Number.isFinite(q)) q = 1;
+  if (q < 1) q = 1;
+  if (q > available) q = available;
+
+  qtyInput.value = String(q);
+  updateTotalUI();
+});
+
 closeModal.onclick = () => {
   modal.style.display = "none";
+  selectedTire = null;
+  checkoutForm.reset();
 };
 
 window.onclick = e => {
-  if (e.target === modal) modal.style.display = "none";
+  if (e.target === modal) {
+    modal.style.display = "none";
+    selectedTire = null;
+    checkoutForm.reset();
+  }
 };
 
 checkoutForm.onsubmit = async e => {
@@ -213,19 +273,23 @@ checkoutForm.onsubmit = async e => {
     return;
   }
 
-  const name = checkoutForm[0].value.trim();
-  const phone = checkoutForm[1].value.trim();
-
-  // 3-й інпут = кількість
-  const qtyRaw = checkoutForm[2].value;
-  const quantity = Number(qtyRaw);
+  const available = calcAvailable(selectedTire);
+  const quantity = Number(qtyInput.value);
 
   if (!Number.isFinite(quantity) || quantity <= 0) {
     alert("❌ Вкажіть коректну кількість");
     return;
   }
+  if (quantity > available) {
+    alert(`❌ Недостатньо шин. Доступно: ${available}`);
+    return;
+  }
 
-  const total = (selectedTire.price ?? 0) * quantity;
+  const name = nameInput.value.trim();
+  const phone = phoneInput.value.trim();
+
+  const price = Number(selectedTire.price ?? 0);
+  const total = price * quantity;
 
   try {
     const res = await fetch("http://localhost:3000/order", {
@@ -233,7 +297,8 @@ checkoutForm.onsubmit = async e => {
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
         tire: `${selectedTire.brand} ${selectedTire.model}`,
-        price: selectedTire.price,
+        size: `${selectedTire.width}/${selectedTire.profile} R${selectedTire.radius}`,
+        price,
         quantity,
         total,
         customer: name,
@@ -243,13 +308,13 @@ checkoutForm.onsubmit = async e => {
 
     if (!res.ok) throw new Error();
 
-    alert("✅ Order sent!");
+    alert("✅ Замовлення відправлено!");
     modal.style.display = "none";
-    checkoutForm.reset();
     selectedTire = null;
+    checkoutForm.reset();
 
   } catch {
-    alert("❌ Order not sent. Backend is not running.");
+    alert("❌ Замовлення не відправлено. Backend не запущений.");
   }
 };
 
