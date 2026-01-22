@@ -32,29 +32,19 @@ function renderTires(data) {
   gallery.innerHTML = "";
 
   const seasons = [
-    {
-      key: "winter",
-      title: "Зимові шини",
-      icon: "❄️",
-      class: "season-winter"
-    },
-    {
-      key: "summer",
-      title: "Літні шини",
-      icon: "☀️",
-      class: "season-summer"
-    },
-    {
-      key: "all-season",
-      title: "Всесезонні шини",
-      icon: "🌿",
-      class: "season-all"
-    }
+    { key: "winter", title: "Зимові шини", icon: "❄️", class: "season-winter" },
+    { key: "summer", title: "Літні шини", icon: "☀️", class: "season-summer" },
+    { key: "all-season", title: "Всесезонні шини", icon: "🌿", class: "season-all" }
   ];
 
   seasons.forEach(season => {
     const seasonTires = data.filter(t => t.season === season.key);
-    if (seasonTires.length === 0) return;
+    if (!seasonTires.length) return;
+
+    const seasonCount = seasonTires.reduce(
+    (sum, t) => sum + t.stock + t.showroom + t.basement,
+      0
+    );
 
     /* HEADER */
     const header = document.createElement("div");
@@ -64,7 +54,7 @@ function renderTires(data) {
         <span class="season-icon">${season.icon}</span>
         <span>${season.title}</span>
       </div>
-      <span class="season-count">${seasonTires.length} шт.</span>
+      <span class="season-count">${seasonCount} шт.</span>
     `;
 
     /* LIST */
@@ -72,38 +62,49 @@ function renderTires(data) {
     list.className = "tire-list";
 
     seasonTires.forEach(tire => {
+      const total =
+                    (tire.stock ?? 0) +
+                    (tire.showroom ?? 0) +
+                    (tire.basement ?? 0);
+
       const card = document.createElement("div");
       card.className = "card";
-
       card.innerHTML = `
         <img src="${tire.image}" alt="${tire.brand} ${tire.model}">
         <div class="card-body">
           <h3>${tire.brand} ${tire.model}</h3>
-          <p>Size: ${tire.width}/${tire.profile} R${tire.radius} ${tire.loadIndex}</p>
-          <p class="price">${tire.price || "—"}</p>
-          <p>In stock: ${tire.amount}</p>
+
+          <p>
+            Розмір: ${tire.width}/${tire.profile} R${tire.radius} ${tire.loadIndex}
+          </p>
+
+          <p class="price">
+            💲 ${tire.price} $ / шт
+          </p>
+
+          <p>📦 Склад: <strong>${tire.stock}</strong></p>
+          <p>🛒 Вітрина: <strong>${tire.showroom}</strong></p>
+          <p>🏢 Підвал: <strong>${tire.basement}</strong></p>
         </div>
       `;
 
       const buyBtn = document.createElement("button");
       buyBtn.className = "buy-btn";
-      buyBtn.textContent = tire.amount > 0 ? "Buy Now" : "Out of stock";
-      buyBtn.disabled = tire.amount === 0;
+      buyBtn.textContent = total > 0 ? "Buy Now" : "Out of stock";
+      buyBtn.disabled = total === 0;
       buyBtn.onclick = () => openCheckout(tire);
 
       card.appendChild(buyBtn);
       list.appendChild(card);
     });
 
-    /* COLLAPSE / EXPAND */
-    header.onclick = () => {
-      list.classList.toggle("collapsed");
-    };
+    header.onclick = () => list.classList.toggle("collapsed");
 
     gallery.appendChild(header);
     gallery.appendChild(list);
   });
 }
+
 
 /* ======================
    FILTERS
@@ -129,14 +130,17 @@ function applyFilters() {
 
   const filtered = tires.filter(tire => {
     const title = `${tire.brand} ${tire.model}`.toLowerCase();
+    const total =
+                  (tire.stock ?? 0) +
+                  (tire.showroom ?? 0) +
+                  (tire.basement ?? 0);
 
     if (search && !title.includes(search)) return false;
     if (season && tire.season !== season) return false;
     if (radius && tire.radius !== Number(radius)) return false;
     if (width && tire.width !== Number(width)) return false;
     if (profile && tire.profile !== Number(profile)) return false;
-    if (inStockOnly && tire.amount <= 0) return false;
-
+    if (inStockOnly && total <= 0) return false;
     if (minPrice && tire.price < minPrice) return false;
     if (maxPrice && tire.price > maxPrice) return false;
 
@@ -147,16 +151,20 @@ function applyFilters() {
   renderTires(filtered);
 }
 
-applyBtn.addEventListener("click", applyFilters);
+applyBtn.onclick = applyFilters;
 
-resetBtn.addEventListener("click", () => {
-  document.querySelectorAll(".filters input, .filters select")
-    .forEach(el => el.value = "");
+resetBtn.onclick = () => {
+  document
+    .querySelectorAll(".filters input, .filters select")
+    .forEach(el => (el.value = ""));
   inStockFilter.checked = false;
   resultsCount.textContent = "";
   renderTires(tires);
-});
+};
 
+searchInput.oninput = applyFilters;
+seasonFilter.onchange = applyFilters;
+radiusFilter.onchange = applyFilters;
 
 /* ======================
    EVENTS
@@ -168,9 +176,23 @@ radiusFilter.addEventListener("change", applyFilters);
 /* ======================
    CHECKOUT MODAL
 ====================== */
+let selectedTire = null;
+
 function openCheckout(tire) {
+  selectedTire = tire;
+
   selectedTireText.textContent =
-    `${tire.brand} ${tire.model} — ${tire.price || "—"}`;
+    `${tire.brand} ${tire.model} — ${tire.price ?? "—"} $`;
+
+  // (опційно) підставимо максимальну к-сть по наявності
+  const qtyInput = checkoutForm.querySelector('input[name="quantity"]') 
+    || checkoutForm.querySelector('input[type="number"]');
+
+  if (qtyInput) {
+    const maxQty = (tire.stock ?? 0) + (tire.showroom ?? 0);
+    qtyInput.max = maxQty;
+    qtyInput.value = maxQty > 0 ? 1 : 0;
+  }
 
   modal.style.display = "flex";
 }
@@ -180,37 +202,54 @@ closeModal.onclick = () => {
 };
 
 window.onclick = e => {
-  if (e.target === modal) {
-    modal.style.display = "none";
-  }
+  if (e.target === modal) modal.style.display = "none";
 };
 
 checkoutForm.onsubmit = async e => {
   e.preventDefault();
 
-  const name = checkoutForm[0].value;
-  const phone = checkoutForm[1].value;
+  if (!selectedTire) {
+    alert("❌ Не вибрано шину");
+    return;
+  }
+
+  const name = checkoutForm[0].value.trim();
+  const phone = checkoutForm[1].value.trim();
+
+  // 3-й інпут = кількість
+  const qtyRaw = checkoutForm[2].value;
+  const quantity = Number(qtyRaw);
+
+  if (!Number.isFinite(quantity) || quantity <= 0) {
+    alert("❌ Вкажіть коректну кількість");
+    return;
+  }
+
+  const total = (selectedTire.price ?? 0) * quantity;
 
   try {
     const res = await fetch("http://localhost:3000/order", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
-        tire: selectedTireText.textContent,
+        tire: `${selectedTire.brand} ${selectedTire.model}`,
+        price: selectedTire.price,
+        quantity,
+        total,
         customer: name,
         phone
       })
     });
 
-    if (!res.ok) throw new Error("Server error");
+    if (!res.ok) throw new Error();
 
-    alert("Order sent!");
+    alert("✅ Order sent!");
     modal.style.display = "none";
     checkoutForm.reset();
+    selectedTire = null;
 
-  } catch (err) {
+  } catch {
     alert("❌ Order not sent. Backend is not running.");
-    console.error(err);
   }
 };
 
