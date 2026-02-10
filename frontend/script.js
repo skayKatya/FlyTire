@@ -216,6 +216,42 @@ function resolveApiBase() {
 
 const API_BASE = resolveApiBase();
 
+function buildApiCandidates() {
+  const candidates = new Set();
+
+  if (API_BASE) candidates.add(API_BASE);
+  candidates.add("");
+  candidates.add("http://127.0.0.1:3000");
+  candidates.add("http://localhost:3000");
+
+  return [...candidates];
+}
+
+async function postOrder(payload) {
+  const candidates = buildApiCandidates();
+  let lastError = null;
+
+  for (const base of candidates) {
+    const endpoint = `${base}/api/order`;
+
+    try {
+      const res = await fetch(endpoint, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload)
+      });
+
+      if (!res.ok) throw new Error(`HTTP ${res.status} @ ${endpoint}`);
+      return res;
+    } catch (err) {
+      lastError = err;
+      console.warn(`Order submit failed via ${endpoint}:`, err);
+    }
+  }
+
+  throw lastError || new Error("Unable to reach backend");
+}
+
 function calcAvailable(tire) {
   return (tire.stock ?? 0) + (tire.showroom ?? 0) + (tire.basement ?? 0);
 }
@@ -372,24 +408,19 @@ checkoutForm.onsubmit = async e => {
 
   const price = Number(selectedTire.price ?? 0);
   const total = price * quantity;
+  const payload = {
+    tire: `${selectedTire.brand} ${selectedTire.model}`,
+    size: `${selectedTire.width}/${selectedTire.profile} R${selectedTire.radius}`,
+    price,
+    quantity,
+    available,
+    total,
+    customer: name,
+    phone
+  };
 
   try {
-    const res = await fetch(`${API_BASE}/api/order`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        tire: `${selectedTire.brand} ${selectedTire.model}`,
-        size: `${selectedTire.width}/${selectedTire.profile} R${selectedTire.radius}`,
-        price,
-        quantity,
-        available,
-        total,
-        customer: name,
-        phone
-      })
-    });
-
-    if (!res.ok) throw new Error(`HTTP ${res.status}`);
+    await postOrder(payload);
 
     consumeStock(selectedTire, quantity);
     applyFilters();
@@ -401,10 +432,9 @@ checkoutForm.onsubmit = async e => {
 
   } catch (err) {
     console.error("Order submit failed:", err);
-    const backendHint = API_BASE
-      ? ` Перевірте, що backend запущений на ${API_BASE}`
-      : "";
-    alert(`❌ Замовлення не відправлено.${backendHint}`);
+    alert(
+      "❌ Замовлення не відправлено. Перевірте, що backend запущений на http://127.0.0.1:3000 або http://localhost:3000"
+    );
   }
 };
 
