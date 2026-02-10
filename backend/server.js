@@ -104,6 +104,7 @@ function buildTelegramMessage(body) {
   const p = Number(price);
   const q = Number(quantity);
   const t = Number(total);
+  const a = Number(available);
 
   return (
     `🛞 <b>НОВЕ ЗАМОВЛЕННЯ — Fly Tire Shop</b>\n\n` +
@@ -116,8 +117,21 @@ function buildTelegramMessage(body) {
     `🔹 <b>Сума:</b> ${Number.isFinite(t) ? t.toFixed(2) : "—"} $\n\n` +
     `👤 <b>Клієнт:</b> ${escapeHtml(customer || "—")}\n` +
     `📞 <b>Телефон:</b> ${escapeHtml(phone || "—")}\n\n` +
-    `📦 <b>В наявності:</b> ${escapeHtml(available ?? "—")} шт`
+    `📦 <b>В наявності:</b> ${Number.isFinite(a) ? a : 0} шт`
   );
+}
+
+function resolveAvailable(payload = {}) {
+  const direct = Number(payload.available);
+  if (Number.isFinite(direct)) return direct;
+
+  const stock = Number(payload.stock ?? 0);
+  const showroom = Number(payload.showroom ?? 0);
+  const basement = Number(payload.basement ?? 0);
+  const aggregated = stock + showroom + basement;
+
+  if (Number.isFinite(aggregated) && aggregated > 0) return aggregated;
+  return 0;
 }
 
 /* ======================
@@ -149,7 +163,8 @@ app.get("/api/test", async (req, res) => {
 app.post("/api/order", async (req, res) => {
   console.log("📥 Incoming order:", req.body);
 
-  const { tire, size, loadIndex, price, quantity, total, customer, phone, available } = req.body;
+  const { tire, size, loadIndex, price, quantity, total, customer, phone } = req.body;
+  const available = resolveAvailable(req.body);
 
   if (!customer || !phone || !tire) {
     return res.status(400).json({ error: "Missing data" });
