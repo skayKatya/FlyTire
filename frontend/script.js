@@ -22,7 +22,6 @@ const radiusFilter = document.getElementById("radiusFilter");
 
 const modal = document.getElementById("checkoutModal");
 const closeModal = document.getElementById("closeModal");
-const selectedTireText = document.getElementById("selectedTire");
 const checkoutForm = document.getElementById("checkoutForm");
 
 /* ======================
@@ -201,8 +200,11 @@ const summaryAvailable = document.getElementById("summaryAvailable");
 const summaryTotal = document.getElementById("summaryTotal");
 
 const qtyInput = checkoutForm.querySelector('input[name="quantity"]');
+const qtyMinusBtn = document.getElementById("qtyMinus");
+const qtyPlusBtn = document.getElementById("qtyPlus");
 const nameInput = checkoutForm.querySelector('input[name="name"]');
 const phoneInput = checkoutForm.querySelector('input[name="phone"]');
+const API_BASE = window.location.port === "5500" ? "http://127.0.0.1:3000" : "";
 
 function calcAvailable(tire) {
   return (tire.stock ?? 0) + (tire.showroom ?? 0) + (tire.basement ?? 0);
@@ -214,13 +216,40 @@ function formatMoney(value) {
   return `${n.toFixed(2)} $`;
 }
 
+
+function normalizeQuantity({ clampToAvailable = false } = {}) {
+  if (!selectedTire) return 0;
+
+  const available = calcAvailable(selectedTire);
+  const raw = qtyInput.value.trim();
+
+  if (raw === "") {
+    if (clampToAvailable && available > 0) {
+      qtyInput.value = "1";
+      return 1;
+    }
+    return 0;
+  }
+
+  let q = Number(raw);
+
+  if (!Number.isFinite(q)) q = 0;
+  q = Math.floor(q);
+
+  if (q < 1) q = 1;
+  if (clampToAvailable && q > available) q = available;
+
+  qtyInput.value = q > 0 ? String(q) : "";
+  return q;
+}
+
 function updateTotalUI() {
   if (!selectedTire) {
     summaryTotal.textContent = "—";
     return;
   }
 
-  const quantity = Number(qtyInput.value);
+  const quantity = normalizeQuantity();
   const price = Number(selectedTire.price ?? 0);
 
   if (!Number.isFinite(quantity) || quantity <= 0) {
@@ -246,6 +275,8 @@ function openCheckout(tire) {
   qtyInput.max = String(available);
   qtyInput.value = available > 0 ? "1" : "0";
   qtyInput.disabled = available <= 0;
+  qtyMinusBtn.disabled = available <= 0;
+  qtyPlusBtn.disabled = available <= 0;
 
   updateTotalUI();
 
@@ -253,19 +284,27 @@ function openCheckout(tire) {
 }
 
 qtyInput.addEventListener("input", () => {
-  // не даємо вийти за max
-  if (!selectedTire) return;
-
-  const available = calcAvailable(selectedTire);
-  let q = Number(qtyInput.value);
-
-  if (!Number.isFinite(q)) q = 1;
-  if (q < 1) q = 1;
-  if (q > available) q = available;
-
-  qtyInput.value = String(q);
   updateTotalUI();
 });
+
+qtyInput.addEventListener("blur", () => {
+  normalizeQuantity({ clampToAvailable: true });
+  updateTotalUI();
+});
+
+function changeQtyBy(delta) {
+  if (!selectedTire || qtyInput.disabled) return;
+
+  const available = calcAvailable(selectedTire);
+  const current = normalizeQuantity({ clampToAvailable: true }) || 1;
+  const next = Math.min(available, Math.max(1, current + delta));
+
+  qtyInput.value = String(next);
+  updateTotalUI();
+}
+
+qtyMinusBtn.addEventListener("click", () => changeQtyBy(-1));
+qtyPlusBtn.addEventListener("click", () => changeQtyBy(1));
 
 closeModal.onclick = () => {
   modal.style.display = "none";
@@ -290,7 +329,7 @@ checkoutForm.onsubmit = async e => {
   }
 
   const available = calcAvailable(selectedTire);
-  const quantity = Number(qtyInput.value);
+  const quantity = normalizeQuantity({ clampToAvailable: true });
 
   if (!Number.isFinite(quantity) || quantity <= 0) {
     alert("❌ Вкажіть коректну кількість");
@@ -308,7 +347,7 @@ checkoutForm.onsubmit = async e => {
   const total = price * quantity;
 
   try {
-    const res = await fetch("/api/order", {
+    const res = await fetch(`${API_BASE}/api/order`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
@@ -322,7 +361,7 @@ checkoutForm.onsubmit = async e => {
       })
     });
 
-    if (!res.ok) throw new Error();
+    if (!res.ok) throw new Error(`HTTP ${res.status}`);
 
     alert("✅ Замовлення відправлено!");
     modal.style.display = "none";
@@ -330,7 +369,7 @@ checkoutForm.onsubmit = async e => {
     checkoutForm.reset();
 
   } catch {
-    alert("❌ Замовлення не відправлено. Backend не запущений.");
+    alert("❌ Замовлення не відправлено. Перевірте, що backend запущений на http://127.0.0.1:3000");
   }
 };
 
