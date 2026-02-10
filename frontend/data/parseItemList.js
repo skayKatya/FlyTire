@@ -101,6 +101,9 @@ function parseTires(text) {
         loadIndex: loadIndexMatch ? loadIndexMatch[1] : "",
         season: detectSeason(line),
         price: 0,
+        stock: 0,
+        basement: 0,
+        showroom: 4,
         amount: 0,
         image: "./images/default-tire.jpg"
       };
