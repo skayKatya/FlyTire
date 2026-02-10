@@ -279,6 +279,33 @@ body {
   border-color: #cfcfcf;
 }
 
+
+.qty-control {
+  display: grid;
+  grid-template-columns: 44px 1fr 44px;
+  gap: 8px;
+  align-items: center;
+}
+
+.qty-btn {
+  height: 42px;
+  border: 1px solid #e5e5e5;
+  border-radius: 12px;
+  background: #fff;
+  cursor: pointer;
+  font-size: 22px;
+  line-height: 1;
+}
+
+.qty-btn:hover {
+  background: #f7f7f7;
+}
+
+.qty-btn:disabled {
+  opacity: .5;
+  cursor: not-allowed;
+}
+
 .totals {
   border-top: 1px solid #eee;
   padding-top: 10px;

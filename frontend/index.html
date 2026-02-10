@@ -127,7 +127,11 @@
     <form id="checkoutForm" class="checkout-form">
       <label class="field">
         <span>Кількість</span>
-        <input name="quantity" type="number" min="1" step="1" required />
+        <div class="qty-control">
+          <button type="button" class="qty-btn" id="qtyMinus">−</button>
+          <input name="quantity" type="number" min="1" step="1" required />
+          <button type="button" class="qty-btn" id="qtyPlus">+</button>
+        </div>
       </label>
 
       <label class="field">
