@@ -32,17 +32,12 @@ const FRONTEND_DIR = path.join(__dirname, "..", "frontend");
 /* ======================
    MIDDLEWARE
 ====================== */
-const ALLOWED_ORIGINS = [
-  "http://127.0.0.1:5500",
-  "http://localhost:5500",
-  "http://127.0.0.1:3000",
-  "http://localhost:3000"
-];
+const LOCAL_ORIGIN_RE = /^https?:\/\/(localhost|127\.0\.0\.1)(:\d+)?$/;
 
 app.use(
   cors({
     origin: (origin, cb) => {
-      if (!origin || ALLOWED_ORIGINS.includes(origin)) return cb(null, true);
+      if (!origin || LOCAL_ORIGIN_RE.test(origin)) return cb(null, true);
       return cb(new Error(`Not allowed by CORS: ${origin}`));
     },
     methods: ["GET", "POST", "OPTIONS"],
