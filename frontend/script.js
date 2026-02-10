@@ -204,10 +204,17 @@ const qtyMinusBtn = document.getElementById("qtyMinus");
 const qtyPlusBtn = document.getElementById("qtyPlus");
 const nameInput = checkoutForm.querySelector('input[name="name"]');
 const phoneInput = checkoutForm.querySelector('input[name="phone"]');
-const isLocalFrontend = ["localhost", "127.0.0.1"].includes(window.location.hostname);
-const API_BASE = isLocalFrontend && window.location.port !== "3000"
-  ? "http://127.0.0.1:3000"
-  : "";
+
+function resolveApiBase() {
+  const { hostname, port, protocol } = window.location;
+  const isLocalHost = ["localhost", "127.0.0.1"].includes(hostname);
+
+  if (protocol === "file:") return "http://127.0.0.1:3000";
+  if (isLocalHost && port !== "3000") return "http://127.0.0.1:3000";
+  return "";
+}
+
+const API_BASE = resolveApiBase();
 
 function calcAvailable(tire) {
   return (tire.stock ?? 0) + (tire.showroom ?? 0) + (tire.basement ?? 0);
@@ -306,6 +313,23 @@ function changeQtyBy(delta) {
   updateTotalUI();
 }
 
+function consumeStock(tire, quantity) {
+  const locations = ["stock", "showroom", "basement"];
+  let remaining = quantity;
+
+  for (const location of locations) {
+    const current = Number(tire[location] ?? 0);
+    if (remaining <= 0) break;
+    if (current <= 0) continue;
+
+    const taken = Math.min(current, remaining);
+    tire[location] = current - taken;
+    remaining -= taken;
+  }
+
+  return remaining === 0;
+}
+
 qtyMinusBtn.addEventListener("click", () => changeQtyBy(-1));
 qtyPlusBtn.addEventListener("click", () => changeQtyBy(1));
 
@@ -358,6 +382,7 @@ checkoutForm.onsubmit = async e => {
         size: `${selectedTire.width}/${selectedTire.profile} R${selectedTire.radius}`,
         price,
         quantity,
+        available,
         total,
         customer: name,
         phone
@@ -366,13 +391,20 @@ checkoutForm.onsubmit = async e => {
 
     if (!res.ok) throw new Error(`HTTP ${res.status}`);
 
+    consumeStock(selectedTire, quantity);
+    applyFilters();
+
     alert("✅ Замовлення відправлено!");
     modal.style.display = "none";
     selectedTire = null;
     checkoutForm.reset();
 
-  } catch {
-    alert("❌ Замовлення не відправлено. Перевірте, що backend запущений на http://127.0.0.1:3000");
+  } catch (err) {
+    console.error("Order submit failed:", err);
+    const backendHint = API_BASE
+      ? ` Перевірте, що backend запущений на ${API_BASE}`
+      : "";
+    alert(`❌ Замовлення не відправлено.${backendHint}`);
   }
 };
 
