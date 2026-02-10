@@ -204,7 +204,10 @@ const qtyMinusBtn = document.getElementById("qtyMinus");
 const qtyPlusBtn = document.getElementById("qtyPlus");
 const nameInput = checkoutForm.querySelector('input[name="name"]');
 const phoneInput = checkoutForm.querySelector('input[name="phone"]');
-const API_BASE = window.location.port === "5500" ? "http://127.0.0.1:3000" : "";
+const isLocalFrontend = ["localhost", "127.0.0.1"].includes(window.location.hostname);
+const API_BASE = isLocalFrontend && window.location.port !== "3000"
+  ? "http://127.0.0.1:3000"
+  : "";
 
 function calcAvailable(tire) {
   return (tire.stock ?? 0) + (tire.showroom ?? 0) + (tire.basement ?? 0);
