@@ -176,12 +176,15 @@ body {
   background: #e8f1ff;
 }
 
-.season-summer {
-  background: #fff4e0;
+.season-summer-all {
+  background: linear-gradient(90deg, #fff4e0, #eaf7ec);
 }
 
-.season-all {
-  background: #eaf7ec;
+.season-type {
+  margin: 6px 0;
+  font-size: 14px;
+  font-weight: 600;
+  color: #23604a;
 }
 
 /* ===== MODAL ===== */

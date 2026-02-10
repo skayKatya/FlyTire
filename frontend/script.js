@@ -32,13 +32,24 @@ function renderTires(data) {
   gallery.innerHTML = "";
 
   const seasons = [
-    { key: "winter", title: "Зимові шини", icon: "❄️", class: "season-winter" },
-    { key: "summer", title: "Літні шини", icon: "☀️", class: "season-summer" },
-    { key: "all-season", title: "Всесезонні шини", icon: "🌿", class: "season-all" }
+    {
+      key: "winter",
+      title: "Зимові шини",
+      icon: "❄️",
+      class: "season-winter",
+      matches: ["winter"]
+    },
+    {
+      key: "summer-all",
+      title: "Літні + Всесезонні шини",
+      icon: "☀️🌿",
+      class: "season-summer-all",
+      matches: ["summer", "all-season"]
+    }
   ];
 
   seasons.forEach(season => {
-    const seasonTires = data.filter(t => t.season === season.key);
+    const seasonTires = data.filter(t => season.matches.includes(t.season));
     if (!seasonTires.length) return;
 
     const seasonCount = seasonTires.reduce(
@@ -76,6 +87,10 @@ function renderTires(data) {
 
           <p>
             Розмір: ${tire.width}/${tire.profile} R${tire.radius} ${tire.loadIndex}
+          </p>
+
+          <p class="season-type">
+            ${tire.season === "all-season" ? "🌿 Всесезонні" : tire.season === "summer" ? "☀️ Літні" : "❄️ Зимові"}
           </p>
 
           <p class="price">
@@ -136,7 +151,8 @@ function applyFilters() {
                   (tire.basement ?? 0);
 
     if (search && !title.includes(search)) return false;
-    if (season && tire.season !== season) return false;
+    if (season === "winter" && tire.season !== "winter") return false;
+    if (season === "summer-all" && !["summer", "all-season"].includes(tire.season)) return false;
     if (radius && tire.radius !== Number(radius)) return false;
     if (width && tire.width !== Number(width)) return false;
     if (profile && tire.profile !== Number(profile)) return false;
