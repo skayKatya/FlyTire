@@ -27,41 +27,12 @@ const adminPanel = document.getElementById("adminPanel");
 const adminLoginBtn = document.getElementById("adminLoginBtn");
 const adminLogoutBtn = document.getElementById("adminLogoutBtn");
 const adminStatus = document.getElementById("adminStatus");
-const adminLoginModal = document.getElementById("adminLoginModal");
-const closeAdminModalBtn = document.getElementById("closeAdminModal");
-const adminLoginForm = document.getElementById("adminLoginForm");
-const adminLoginInput = document.getElementById("adminLoginInput");
-const adminPasswordInput = document.getElementById("adminPasswordInput");
-const adminLoginError = document.getElementById("adminLoginError");
 
+const ADMIN_LOGIN = "admin";
+const ADMIN_PASSWORD = "flytire-admin";
 const ADMIN_SESSION_KEY = "flytire_admin_logged_in";
 
 let isAdmin = localStorage.getItem(ADMIN_SESSION_KEY) === "1";
-
-async function postAdminLogin(payload) {
-  const candidates = buildApiCandidates();
-
-  for (const base of candidates) {
-    const endpoint = `${base}/api/admin/login`;
-
-    try {
-      const res = await fetch(endpoint, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(payload)
-      });
-
-      if (!res.ok) continue;
-
-      const data = await res.json();
-      if (data?.success) return true;
-    } catch {
-      // try next candidate
-    }
-  }
-
-  return false;
-}
 
 function shouldSilenceUnhandledRejection(reason) {
   if (!reason) return false;
@@ -141,7 +112,6 @@ function renderTires(data) {
       const inventoryHtml = isAdmin
         ? `
           <div class="admin-stock-grid" data-tire-index="${tires.indexOf(tire)}">
-            <label>💲 Ціна <input type="number" min="0" step="0.01" data-location="price" value="${tire.price}"></label>
             <label>📦 Склад <input type="number" min="0" step="1" data-location="stock" value="${tire.stock}"></label>
             <label>🛒 Вітрина <input type="number" min="0" step="1" data-location="showroom" value="${tire.showroom}"></label>
             <label>🏢 Підвал <input type="number" min="0" step="1" data-location="basement" value="${tire.basement}"></label>
@@ -183,7 +153,7 @@ function renderTires(data) {
         const inputs = card.querySelectorAll(".admin-stock-grid input");
         inputs.forEach(input => {
           input.addEventListener("change", event => {
-            updateAdminTireField(tire, event.target.dataset.location, event.target.value);
+            updateInventory(tire, event.target.dataset.location, event.target.value);
           });
         });
       }
@@ -266,8 +236,6 @@ seasonFilter.addEventListener("change", applyFilters);
 radiusFilter.addEventListener("change", applyFilters);
 adminLoginBtn.addEventListener("click", adminLogin);
 adminLogoutBtn.addEventListener("click", adminLogout);
-closeAdminModalBtn.addEventListener("click", closeAdminLoginModal);
-adminLoginForm.addEventListener("submit", handleAdminLoginSubmit);
 
 /* ======================
    CHECKOUT MODAL
@@ -285,6 +253,21 @@ const qtyMinusBtn = document.getElementById("qtyMinus");
 const qtyPlusBtn = document.getElementById("qtyPlus");
 const nameInput = checkoutForm.querySelector('input[name="name"]');
 const phoneInput = checkoutForm.querySelector('input[name="phone"]');
+const PHONE_PREFIX = "+380";
+
+function formatPhoneValue(value) {
+  const digits = String(value ?? "").replace(/\D/g, "");
+  const localDigits = digits.startsWith("380") ? digits.slice(3) : digits;
+  return `${PHONE_PREFIX}${localDigits.slice(0, 8)}`;
+}
+
+function normalizePhoneInput() {
+  phoneInput.value = formatPhoneValue(phoneInput.value);
+}
+
+phoneInput.addEventListener("focus", normalizePhoneInput);
+phoneInput.addEventListener("input", normalizePhoneInput);
+phoneInput.addEventListener("blur", normalizePhoneInput);
 
 function resolveApiBase() {
   const { hostname, port, protocol } = window.location;
@@ -400,71 +383,31 @@ function updateAdminUi() {
   adminStatus.textContent = isAdmin ? "Admin mode" : "Гість";
 }
 
-function updateAdminTireField(tire, location, value) {
-  if (!isAdmin) return;
-
-  if (location === "price") {
-    const amount = Number(value);
-    tire.price = Number.isFinite(amount) && amount >= 0 ? Number(amount.toFixed(2)) : 0;
-    applyFilters();
-    return;
-  }
-
-  const inventoryLocations = ["stock", "showroom", "basement"];
-  if (!inventoryLocations.includes(location)) return;
+function updateInventory(tire, location, value) {
+  const allowed = ["stock", "showroom", "basement"];
+  if (!isAdmin || !allowed.includes(location)) return;
 
   const amount = Math.max(0, Math.floor(Number(value) || 0));
   tire[location] = amount;
   applyFilters();
 }
 
-async function adminLogin() {
-  hideAdminLoginError();
-  adminLoginForm.reset();
-  adminLoginModal.style.display = "flex";
-  requestAnimationFrame(() => adminLoginInput.focus());
-}
+function adminLogin() {
+  const login = window.prompt("Введіть логін адміністратора");
+  if (login === null) return;
 
-function closeAdminLoginModal() {
-  adminLoginModal.style.display = "none";
-  hideAdminLoginError();
-}
+  const password = window.prompt("Введіть пароль адміністратора");
+  if (password === null) return;
 
-function showAdminLoginError(message) {
-  adminLoginError.textContent = message;
-  adminLoginError.hidden = false;
-}
-
-function hideAdminLoginError() {
-  adminLoginError.textContent = "";
-  adminLoginError.hidden = true;
-}
-
-async function handleAdminLoginSubmit(event) {
-  event.preventDefault();
-
-  const login = adminLoginInput.value.trim();
-  const password = adminPasswordInput.value;
-
-  hideAdminLoginError();
-
-  if (!login || !password) {
-    showAdminLoginError("Введіть логін і пароль");
-    return;
-  }
-
-  const ok = await postAdminLogin({ login, password });
-
-  if (ok) {
+  if (login === ADMIN_LOGIN && password === ADMIN_PASSWORD) {
     isAdmin = true;
     localStorage.setItem(ADMIN_SESSION_KEY, "1");
     updateAdminUi();
-    closeAdminLoginModal();
     applyFilters();
     return;
   }
 
-  showAdminLoginError("Невірний логін/пароль або недоступний backend");
+  alert("❌ Невірний логін або пароль адміністратора");
 }
 
 function adminLogout() {
@@ -585,6 +528,7 @@ closeModal.onclick = () => {
   modal.style.display = "none";
   selectedTire = null;
   checkoutForm.reset();
+  phoneInput.value = PHONE_PREFIX;
 };
 
 window.onclick = e => {
@@ -592,6 +536,7 @@ window.onclick = e => {
     modal.style.display = "none";
     selectedTire = null;
     checkoutForm.reset();
+    phoneInput.value = PHONE_PREFIX;
   }
 
   if (e.target === adminLoginModal) {
@@ -625,8 +570,16 @@ checkoutForm.onsubmit = async e => {
     return;
   }
 
-  const name = nameInput.value.trim();
-  const phone = phoneInput.value.trim();
+  const name = nameInput.value.trim().toUpperCase();
+  const phone = formatPhoneValue(phoneInput.value);
+
+  if (phone.length !== 12) {
+    alert("❌ Введіть 8 цифр телефону після +380");
+    return;
+  }
+
+  nameInput.value = name;
+  phoneInput.value = phone;
 
   const price = Number(selectedTire.price ?? 0);
   const total = price * quantity;
@@ -651,6 +604,7 @@ checkoutForm.onsubmit = async e => {
     modal.style.display = "none";
     selectedTire = null;
     checkoutForm.reset();
+    phoneInput.value = PHONE_PREFIX;
 
   } catch (err) {
     console.error("Order submit failed:", err);
