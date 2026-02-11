@@ -136,12 +136,21 @@
 
       <label class="field">
         <span>Ваше імʼя</span>
-        <input name="name" type="text" placeholder="Напр. Катя" required />
+        <input name="name" type="text" placeholder="Напр. КАТЯ" required style="text-transform: uppercase;" />
       </label>
 
       <label class="field">
         <span>Телефон</span>
-        <input name="phone" type="tel" placeholder="+380..." required />
+        <input
+          name="phone"
+          type="tel"
+          placeholder="+380XXXXXXXX"
+          value="+380"
+          minlength="12"
+          maxlength="12"
+          pattern="^\+380\d{8}$"
+          required
+        />
       </label>
 
       <div class="totals">
