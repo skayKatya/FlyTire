@@ -113,20 +113,40 @@ body {
   max-width: 1100px;
   margin: 4px auto 0;
   padding: 0 20px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  flex-wrap: nowrap;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 .admin-panel h2 {
-  margin: 4px 0;
-  font-size: 20px;
+  margin: 0;
+  font-size: 14px;
+  line-height: 1.2;
 }
 
 .admin-panel p {
   margin: 0;
-  font-size: 14px;
-  opacity: .7;
+  font-size: 12px;
+  line-height: 1.2;
+  opacity: .75;
+}
+
+
+@media (max-width: 760px) {
+  .admin-panel {
+    flex-wrap: wrap;
+    white-space: normal;
+    row-gap: 4px;
+  }
 }
 
 /* ===== GALLERY / SECTIONS ===== */
+
 .gallery-sections {
   padding: 30px;
 }
