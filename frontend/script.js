@@ -24,6 +24,24 @@ const modal = document.getElementById("checkoutModal");
 const closeModal = document.getElementById("closeModal");
 const checkoutForm = document.getElementById("checkoutForm");
 
+function shouldSilenceUnhandledRejection(reason) {
+  if (!reason) return false;
+
+  const message = typeof reason === "string" ? reason : reason.message;
+  if (typeof message !== "string") return false;
+
+  return message.includes(
+    "A listener indicated an asynchronous response by returning true, but the message channel closed before a response was received"
+  );
+}
+
+window.addEventListener("unhandledrejection", event => {
+  if (!shouldSilenceUnhandledRejection(event.reason)) return;
+
+  console.warn("Ignored browser extension async message error:", event.reason);
+  event.preventDefault();
+});
+
 /* ======================
    RENDER TIRES
 ====================== */
@@ -216,6 +234,92 @@ function resolveApiBase() {
 
 const API_BASE = resolveApiBase();
 
+function buildApiCandidates() {
+  const candidates = new Set();
+  const { hostname, protocol } = window.location;
+  const localHosts = [hostname, "127.0.0.1", "localhost", "0.0.0.0"];
+
+  if (API_BASE) candidates.add(API_BASE);
+  candidates.add("");
+
+  if (protocol !== "file:") {
+    for (const host of localHosts) {
+      if (!host) continue;
+      candidates.add(`${protocol}//${host}:3000`);
+    }
+  }
+
+  candidates.add("http://127.0.0.1:3000");
+  candidates.add("http://localhost:3000");
+
+  return [...candidates];
+}
+
+async function readErrorMessage(res) {
+  const fallback = `HTTP ${res.status}`;
+
+  try {
+    const data = await res.clone().json();
+    if (typeof data?.error === "string" && data.error.trim()) return data.error;
+  } catch {
+    // ignore parse errors and try text body below
+  }
+
+  try {
+    const text = (await res.text()).trim();
+    if (text) return text;
+  } catch {
+    // ignore read errors and return fallback
+  }
+
+  return fallback;
+}
+
+async function postOrder(payload) {
+  const candidates = buildApiCandidates();
+  const errors = [];
+
+  for (const base of candidates) {
+    const endpoint = `${base}/api/order`;
+
+    try {
+      const res = await fetch(endpoint, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload)
+      });
+
+      if (res.ok) return res;
+
+      const message = await readErrorMessage(res);
+      const error = new Error(`${message} @ ${endpoint}`);
+      error.status = res.status;
+      error.endpoint = endpoint;
+      errors.push(error);
+
+      if (res.status >= 500 || res.status === 404) {
+        console.warn(`Order submit failed via ${endpoint}:`, error);
+        continue;
+      }
+
+      throw error;
+    } catch (err) {
+      const status = Number(err?.status);
+      const isHttpError = Number.isFinite(status);
+      if (!isHttpError) {
+        errors.push(err);
+      }
+
+      console.warn(`Order submit failed via ${endpoint}:`, err);
+      if (isHttpError) throw err;
+    }
+  }
+
+  const finalError = errors[errors.length - 1] || new Error("Unable to reach backend");
+  finalError.details = errors;
+  throw finalError;
+}
+
 function calcAvailable(tire) {
   return (tire.stock ?? 0) + (tire.showroom ?? 0) + (tire.basement ?? 0);
 }
@@ -372,24 +476,19 @@ checkoutForm.onsubmit = async e => {
 
   const price = Number(selectedTire.price ?? 0);
   const total = price * quantity;
+  const payload = {
+    tire: `${selectedTire.brand} ${selectedTire.model}`,
+    size: `${selectedTire.width}/${selectedTire.profile} R${selectedTire.radius}`,
+    price,
+    quantity,
+    available,
+    total,
+    customer: name,
+    phone
+  };
 
   try {
-    const res = await fetch(`${API_BASE}/api/order`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        tire: `${selectedTire.brand} ${selectedTire.model}`,
-        size: `${selectedTire.width}/${selectedTire.profile} R${selectedTire.radius}`,
-        price,
-        quantity,
-        available,
-        total,
-        customer: name,
-        phone
-      })
-    });
-
-    if (!res.ok) throw new Error(`HTTP ${res.status}`);
+    await postOrder(payload);
 
     consumeStock(selectedTire, quantity);
     applyFilters();
@@ -401,10 +500,16 @@ checkoutForm.onsubmit = async e => {
 
   } catch (err) {
     console.error("Order submit failed:", err);
-    const backendHint = API_BASE
-      ? ` Перевірте, що backend запущений на ${API_BASE}`
-      : "";
-    alert(`❌ Замовлення не відправлено.${backendHint}`);
+
+    const backendHint =
+      "Перевірте, що backend запущений на http://127.0.0.1:3000 або http://localhost:3000";
+    const errorText = typeof err?.message === "string" ? err.message.split(" @ ")[0] : "";
+
+    alert(
+      errorText
+        ? `❌ Замовлення не відправлено: ${errorText}`
+        : `❌ Замовлення не відправлено. ${backendHint}`
+    );
   }
 };
 
