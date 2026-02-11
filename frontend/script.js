@@ -28,34 +28,11 @@ const adminLoginBtn = document.getElementById("adminLoginBtn");
 const adminLogoutBtn = document.getElementById("adminLogoutBtn");
 const adminStatus = document.getElementById("adminStatus");
 
+const ADMIN_LOGIN = "admin";
+const ADMIN_PASSWORD = "flytire-admin";
 const ADMIN_SESSION_KEY = "flytire_admin_logged_in";
 
 let isAdmin = localStorage.getItem(ADMIN_SESSION_KEY) === "1";
-
-async function postAdminLogin(payload) {
-  const candidates = buildApiCandidates();
-
-  for (const base of candidates) {
-    const endpoint = `${base}/api/admin/login`;
-
-    try {
-      const res = await fetch(endpoint, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(payload)
-      });
-
-      if (!res.ok) continue;
-
-      const data = await res.json();
-      if (data?.success) return true;
-    } catch {
-      // try next candidate
-    }
-  }
-
-  return false;
-}
 
 function shouldSilenceUnhandledRejection(reason) {
   if (!reason) return false;
@@ -276,6 +253,21 @@ const qtyMinusBtn = document.getElementById("qtyMinus");
 const qtyPlusBtn = document.getElementById("qtyPlus");
 const nameInput = checkoutForm.querySelector('input[name="name"]');
 const phoneInput = checkoutForm.querySelector('input[name="phone"]');
+const PHONE_PREFIX = "+380";
+
+function formatPhoneValue(value) {
+  const digits = String(value ?? "").replace(/\D/g, "");
+  const localDigits = digits.startsWith("380") ? digits.slice(3) : digits;
+  return `${PHONE_PREFIX}${localDigits.slice(0, 8)}`;
+}
+
+function normalizePhoneInput() {
+  phoneInput.value = formatPhoneValue(phoneInput.value);
+}
+
+phoneInput.addEventListener("focus", normalizePhoneInput);
+phoneInput.addEventListener("input", normalizePhoneInput);
+phoneInput.addEventListener("blur", normalizePhoneInput);
 
 function resolveApiBase() {
   const { hostname, port, protocol } = window.location;
@@ -400,16 +392,14 @@ function updateInventory(tire, location, value) {
   applyFilters();
 }
 
-async function adminLogin() {
+function adminLogin() {
   const login = window.prompt("Введіть логін адміністратора");
   if (login === null) return;
 
   const password = window.prompt("Введіть пароль адміністратора");
   if (password === null) return;
 
-  const ok = await postAdminLogin({ login: login.trim(), password });
-
-  if (ok) {
+  if (login === ADMIN_LOGIN && password === ADMIN_PASSWORD) {
     isAdmin = true;
     localStorage.setItem(ADMIN_SESSION_KEY, "1");
     updateAdminUi();
@@ -417,7 +407,7 @@ async function adminLogin() {
     return;
   }
 
-  alert("❌ Невірний логін/пароль або недоступний backend");
+  alert("❌ Невірний логін або пароль адміністратора");
 }
 
 function adminLogout() {
@@ -538,6 +528,7 @@ closeModal.onclick = () => {
   modal.style.display = "none";
   selectedTire = null;
   checkoutForm.reset();
+  phoneInput.value = PHONE_PREFIX;
 };
 
 window.onclick = e => {
@@ -545,6 +536,7 @@ window.onclick = e => {
     modal.style.display = "none";
     selectedTire = null;
     checkoutForm.reset();
+    phoneInput.value = PHONE_PREFIX;
   }
 };
 
@@ -568,8 +560,16 @@ checkoutForm.onsubmit = async e => {
     return;
   }
 
-  const name = nameInput.value.trim();
-  const phone = phoneInput.value.trim();
+  const name = nameInput.value.trim().toUpperCase();
+  const phone = formatPhoneValue(phoneInput.value);
+
+  if (phone.length !== 12) {
+    alert("❌ Введіть 8 цифр телефону після +380");
+    return;
+  }
+
+  nameInput.value = name;
+  phoneInput.value = phone;
 
   const price = Number(selectedTire.price ?? 0);
   const total = price * quantity;
@@ -594,6 +594,7 @@ checkoutForm.onsubmit = async e => {
     modal.style.display = "none";
     selectedTire = null;
     checkoutForm.reset();
+    phoneInput.value = PHONE_PREFIX;
 
   } catch (err) {
     console.error("Order submit failed:", err);
