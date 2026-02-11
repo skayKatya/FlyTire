@@ -12,6 +12,12 @@
 <header class="hero">
   <h1>Fly Tire Shop</h1>
   <p>Підбір шин для вашого авто</p>
+
+  <div class="admin-auth" id="adminAuthBar">
+    <button id="adminLoginBtn" class="admin-btn" type="button">🔐 Admin Login</button>
+    <button id="adminLogoutBtn" class="admin-btn" type="button" hidden>🚪 Admin Logout</button>
+    <span id="adminStatus" class="admin-status">Гість</span>
+  </div>
 </header>
 
 <!-- FILTERS -->
@@ -89,6 +95,11 @@
 
 <p id="resultsCount" class="results-count"></p>
 
+<section id="adminPanel" class="admin-panel" hidden>
+  <h2>Панель адміністратора</h2>
+  <p>Редагуйте залишки по локаціях: Склад, Вітрина, Підвал.</p>
+</section>
+
 <!-- GALLERY -->
 <section class="gallery" id="tireGallery">
   <!-- JS renders tires here -->
@@ -152,6 +163,36 @@
       </div>
 
       <button type="submit" class="confirm-btn">✅ Підтвердити замовлення</button>
+    </form>
+  </div>
+</div>
+
+<div class="modal" id="adminLoginModal" aria-hidden="true">
+  <div class="modal-content admin-modal-content">
+    <button class="close" id="closeAdminModal" type="button">×</button>
+
+    <div class="admin-modal-header">
+      <div class="admin-modal-icon">🔐</div>
+      <div>
+        <h2>Вхід адміністратора</h2>
+        <p>Лише адміністратор може бачити точні залишки та змінювати їх.</p>
+      </div>
+    </div>
+
+    <form id="adminLoginForm" class="admin-login-form">
+      <label class="field">
+        <span>Логін</span>
+        <input id="adminLoginInput" name="login" type="text" placeholder="Введіть логін" required />
+      </label>
+
+      <label class="field">
+        <span>Пароль</span>
+        <input id="adminPasswordInput" name="password" type="password" placeholder="Введіть пароль" required />
+      </label>
+
+      <p id="adminLoginError" class="admin-login-error" hidden></p>
+
+      <button type="submit" class="confirm-btn admin-submit-btn">Увійти як адміністратор</button>
     </form>
   </div>
 </div>
