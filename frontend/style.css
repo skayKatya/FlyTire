@@ -13,7 +13,7 @@ body {
 .hero {
   background:
     linear-gradient(rgba(0,0,0,0.6), rgba(0,0,0,0.6)),
-    url("./images/landingPage/landing.png");
+    url("./images/landingPage/flyTireWeb.png");
   background-size: cover;
   background-position: center;
   color: white;
