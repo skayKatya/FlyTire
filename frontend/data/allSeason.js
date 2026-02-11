@@ -1,10 +1,16 @@
 export const allSeasonTires = [
   {
-    name: "Pirelli Cinturato",
-    price: "$170",
-    size: "235/40R18",
+    brand: "Pirelli",
+    model: "Cinturato",
+    width: 235,
+    profile: 40,
+    radius: 18,
+    loadIndex: "95Y",
     season: "all-season",
-    image: "./images/pirelli.jpg",
-    amount: 2
+    price: 170,
+    stock: 2,
+    basement: 0,
+    showroom: 0,
+    image: "./images/landingPage/landing.png"
   }
 ];
