@@ -294,15 +294,20 @@ body {
   margin-top: auto;
   width: 100%;
   padding: 12px;
-  background: #111;
-  color: white;
-  border: none;
+  background: #ff8a26;
+  color: #fff;
+  border: 1px solid var(--accent-border);
+  border-radius: 10px;
   cursor: pointer;
   font-size: 15px;
+  font-weight: 700;
+  box-shadow: 0 9px 20px rgba(255, 130, 22, .28);
+  transition: transform .2s ease, filter .2s ease;
 }
 
 .buy-btn:hover {
-  background: #d60000;
+  transform: translateY(-1px);
+  background: #ff7a18;
 }
 
 /* ===== SEASON HEADERS ===== */
