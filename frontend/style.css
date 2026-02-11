@@ -21,6 +21,29 @@ body {
   padding: 80px 20px;
 }
 
+.admin-auth {
+  margin-top: 16px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.admin-btn {
+  border: 1px solid rgba(255,255,255,0.45);
+  background: rgba(17,17,17,0.65);
+  color: #fff;
+  padding: 8px 12px;
+  border-radius: 8px;
+  cursor: pointer;
+}
+
+.admin-status {
+  font-size: 13px;
+  opacity: 0.85;
+}
+
 /* ===== FILTERS ===== */
 .filters {
   display: flex;
@@ -64,6 +87,23 @@ body {
   text-align: center;
   margin: 10px 0;
   opacity: 0.7;
+}
+
+.admin-panel {
+  max-width: 1100px;
+  margin: 4px auto 0;
+  padding: 0 20px;
+}
+
+.admin-panel h2 {
+  margin: 4px 0;
+  font-size: 20px;
+}
+
+.admin-panel p {
+  margin: 0;
+  font-size: 14px;
+  opacity: .7;
 }
 
 /* ===== GALLERY / SECTIONS ===== */
@@ -117,6 +157,25 @@ body {
   flex: 1;
   display: flex;
   flex-direction: column;
+}
+
+.admin-stock-grid {
+  display: grid;
+  gap: 8px;
+  margin-top: 6px;
+}
+
+.admin-stock-grid label {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 10px;
+  font-size: 14px;
+}
+
+.admin-stock-grid input {
+  width: 90px;
+  padding: 4px 8px;
 }
 
 .price {

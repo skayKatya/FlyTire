@@ -23,6 +23,39 @@ const radiusFilter = document.getElementById("radiusFilter");
 const modal = document.getElementById("checkoutModal");
 const closeModal = document.getElementById("closeModal");
 const checkoutForm = document.getElementById("checkoutForm");
+const adminPanel = document.getElementById("adminPanel");
+const adminLoginBtn = document.getElementById("adminLoginBtn");
+const adminLogoutBtn = document.getElementById("adminLogoutBtn");
+const adminStatus = document.getElementById("adminStatus");
+
+const ADMIN_SESSION_KEY = "flytire_admin_logged_in";
+
+let isAdmin = localStorage.getItem(ADMIN_SESSION_KEY) === "1";
+
+async function postAdminLogin(payload) {
+  const candidates = buildApiCandidates();
+
+  for (const base of candidates) {
+    const endpoint = `${base}/api/admin/login`;
+
+    try {
+      const res = await fetch(endpoint, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload)
+      });
+
+      if (!res.ok) continue;
+
+      const data = await res.json();
+      if (data?.success) return true;
+    } catch {
+      // try next candidate
+    }
+  }
+
+  return false;
+}
 
 function shouldSilenceUnhandledRejection(reason) {
   if (!reason) return false;
@@ -47,6 +80,10 @@ window.addEventListener("unhandledrejection", event => {
 ====================== */
 function renderTires(data) {
   gallery.innerHTML = "";
+  adminPanel.innerHTML = `
+    <h2>Панель адміністратора</h2>
+    <p>Редагуйте залишки по локаціях: Склад, Вітрина, Підвал.</p>
+  `;
 
   const seasons = [
     {
@@ -69,10 +106,7 @@ function renderTires(data) {
     const seasonTires = data.filter(t => season.matches.includes(t.season));
     if (!seasonTires.length) return;
 
-    const seasonCount = seasonTires.reduce(
-    (sum, t) => sum + t.stock + t.showroom + t.basement,
-      0
-    );
+    const seasonCount = seasonTires.reduce((sum, t) => sum + t.stock + t.showroom + t.basement, 0);
 
     /* HEADER */
     const header = document.createElement("div");
@@ -82,7 +116,7 @@ function renderTires(data) {
         <span class="season-icon">${season.icon}</span>
         <span>${season.title}</span>
       </div>
-      <span class="season-count">${seasonCount} шт.</span>
+      <span class="season-count">${isAdmin ? `${seasonCount} шт.` : `${seasonTires.length} моделей`}</span>
     `;
 
     /* LIST */
@@ -97,6 +131,17 @@ function renderTires(data) {
 
       const card = document.createElement("div");
       card.className = "card";
+      const availabilityText = total > 0 ? "✅ В наявності" : "❌ Немає в наявності";
+      const inventoryHtml = isAdmin
+        ? `
+          <div class="admin-stock-grid" data-tire-index="${tires.indexOf(tire)}">
+            <label>📦 Склад <input type="number" min="0" step="1" data-location="stock" value="${tire.stock}"></label>
+            <label>🛒 Вітрина <input type="number" min="0" step="1" data-location="showroom" value="${tire.showroom}"></label>
+            <label>🏢 Підвал <input type="number" min="0" step="1" data-location="basement" value="${tire.basement}"></label>
+          </div>
+        `
+        : `<p>${availabilityText}</p>`;
+
       card.innerHTML = `
         <img src="${tire.image}" alt="${tire.brand} ${tire.model}">
         <div class="card-body">
@@ -114,9 +159,7 @@ function renderTires(data) {
             💲 ${tire.price} $ / шт
           </p>
 
-          <p>📦 Склад: <strong>${tire.stock}</strong></p>
-          <p>🛒 Вітрина: <strong>${tire.showroom}</strong></p>
-          <p>🏢 Підвал: <strong>${tire.basement}</strong></p>
+          ${inventoryHtml}
         </div>
       `;
 
@@ -128,6 +171,15 @@ function renderTires(data) {
 
       card.appendChild(buyBtn);
       list.appendChild(card);
+
+      if (isAdmin) {
+        const inputs = card.querySelectorAll(".admin-stock-grid input");
+        inputs.forEach(input => {
+          input.addEventListener("change", event => {
+            updateInventory(tire, event.target.dataset.location, event.target.value);
+          });
+        });
+      }
     });
 
     header.onclick = () => list.classList.toggle("collapsed");
@@ -205,6 +257,8 @@ radiusFilter.onchange = applyFilters;
 searchInput.addEventListener("input", applyFilters);
 seasonFilter.addEventListener("change", applyFilters);
 radiusFilter.addEventListener("change", applyFilters);
+adminLoginBtn.addEventListener("click", adminLogin);
+adminLogoutBtn.addEventListener("click", adminLogout);
 
 /* ======================
    CHECKOUT MODAL
@@ -330,6 +384,49 @@ function formatMoney(value) {
   return `${n.toFixed(2)} $`;
 }
 
+function updateAdminUi() {
+  adminPanel.hidden = !isAdmin;
+  adminLoginBtn.hidden = isAdmin;
+  adminLogoutBtn.hidden = !isAdmin;
+  adminStatus.textContent = isAdmin ? "Admin mode" : "Гість";
+}
+
+function updateInventory(tire, location, value) {
+  const allowed = ["stock", "showroom", "basement"];
+  if (!isAdmin || !allowed.includes(location)) return;
+
+  const amount = Math.max(0, Math.floor(Number(value) || 0));
+  tire[location] = amount;
+  applyFilters();
+}
+
+async function adminLogin() {
+  const login = window.prompt("Введіть логін адміністратора");
+  if (login === null) return;
+
+  const password = window.prompt("Введіть пароль адміністратора");
+  if (password === null) return;
+
+  const ok = await postAdminLogin({ login: login.trim(), password });
+
+  if (ok) {
+    isAdmin = true;
+    localStorage.setItem(ADMIN_SESSION_KEY, "1");
+    updateAdminUi();
+    applyFilters();
+    return;
+  }
+
+  alert("❌ Невірний логін/пароль або недоступний backend");
+}
+
+function adminLogout() {
+  isAdmin = false;
+  localStorage.removeItem(ADMIN_SESSION_KEY);
+  updateAdminUi();
+  applyFilters();
+}
+
 
 function normalizeQuantity({ clampToAvailable = false } = {}) {
   if (!selectedTire) return 0;
@@ -382,7 +479,7 @@ function openCheckout(tire) {
   summaryTire.textContent = `${tire.brand} ${tire.model}`;
   summarySize.textContent = `${tire.width}/${tire.profile} R${tire.radius} ${tire.loadIndex ?? ""}`.trim();
   summaryPrice.textContent = formatMoney(tire.price);
-  summaryAvailable.textContent = `${available} шт.`;
+  summaryAvailable.textContent = isAdmin ? `${available} шт.` : (available > 0 ? "Є в наявності" : "Немає в наявності");
 
   // налаштування кількості
   qtyInput.min = "1";
@@ -516,4 +613,5 @@ checkoutForm.onsubmit = async e => {
 /* ======================
    INIT
 ====================== */
+updateAdminUi();
 renderTires(tires);
