@@ -538,7 +538,17 @@ window.onclick = e => {
     checkoutForm.reset();
     phoneInput.value = PHONE_PREFIX;
   }
+
+  if (e.target === adminLoginModal) {
+    closeAdminLoginModal();
+  }
 };
+
+window.addEventListener("keydown", event => {
+  if (event.key === "Escape" && adminLoginModal.style.display === "flex") {
+    closeAdminLoginModal();
+  }
+});
 
 checkoutForm.onsubmit = async e => {
   e.preventDefault();

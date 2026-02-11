@@ -176,6 +176,36 @@
   </div>
 </div>
 
+<div class="modal" id="adminLoginModal" aria-hidden="true">
+  <div class="modal-content admin-modal-content">
+    <button class="close" id="closeAdminModal" type="button">×</button>
+
+    <div class="admin-modal-header">
+      <div class="admin-modal-icon">🔐</div>
+      <div>
+        <h2>Вхід адміністратора</h2>
+        <p>Лише адміністратор може бачити точні залишки та змінювати їх.</p>
+      </div>
+    </div>
+
+    <form id="adminLoginForm" class="admin-login-form">
+      <label class="field">
+        <span>Логін</span>
+        <input id="adminLoginInput" name="login" type="text" placeholder="Введіть логін" required />
+      </label>
+
+      <label class="field">
+        <span>Пароль</span>
+        <input id="adminPasswordInput" name="password" type="password" placeholder="Введіть пароль" required />
+      </label>
+
+      <p id="adminLoginError" class="admin-login-error" hidden></p>
+
+      <button type="submit" class="confirm-btn admin-submit-btn">Увійти як адміністратор</button>
+    </form>
+  </div>
+</div>
+
 <!-- FOOTER -->
 <footer class="footer">
   <div class="footer-container">
