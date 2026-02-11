@@ -27,9 +27,13 @@ const adminPanel = document.getElementById("adminPanel");
 const adminLoginBtn = document.getElementById("adminLoginBtn");
 const adminLogoutBtn = document.getElementById("adminLogoutBtn");
 const adminStatus = document.getElementById("adminStatus");
+const adminLoginModal = document.getElementById("adminLoginModal");
+const closeAdminModal = document.getElementById("closeAdminModal");
+const adminLoginForm = document.getElementById("adminLoginForm");
+const adminLoginInput = document.getElementById("adminLoginInput");
+const adminPasswordInput = document.getElementById("adminPasswordInput");
+const adminLoginError = document.getElementById("adminLoginError");
 
-const ADMIN_LOGIN = "admin";
-const ADMIN_PASSWORD = "flytire-admin";
 const ADMIN_SESSION_KEY = "flytire_admin_logged_in";
 
 let isAdmin = localStorage.getItem(ADMIN_SESSION_KEY) === "1";
@@ -234,8 +238,10 @@ radiusFilter.onchange = applyFilters;
 searchInput.addEventListener("input", applyFilters);
 seasonFilter.addEventListener("change", applyFilters);
 radiusFilter.addEventListener("change", applyFilters);
-adminLoginBtn.addEventListener("click", adminLogin);
+adminLoginBtn.addEventListener("click", openAdminLoginModal);
 adminLogoutBtn.addEventListener("click", adminLogout);
+closeAdminModal.addEventListener("click", closeAdminLoginModal);
+adminLoginForm.addEventListener("submit", adminLogin);
 
 /* ======================
    CHECKOUT MODAL
@@ -366,6 +372,50 @@ async function postOrder(payload) {
   throw finalError;
 }
 
+async function postAdminLogin(credentials) {
+  const candidates = buildApiCandidates();
+  const errors = [];
+
+  for (const base of candidates) {
+    const endpoint = `${base}/api/admin/login`;
+
+    try {
+      const res = await fetch(endpoint, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(credentials)
+      });
+
+      if (res.ok) return res;
+
+      const message = await readErrorMessage(res);
+      const error = new Error(message);
+      error.status = res.status;
+      error.endpoint = endpoint;
+      errors.push(error);
+
+      if (res.status >= 500 || res.status === 404) {
+        console.warn(`Admin login failed via ${endpoint}:`, error);
+        continue;
+      }
+
+      throw error;
+    } catch (err) {
+      const status = Number(err?.status);
+      const isHttpError = Number.isFinite(status);
+      if (!isHttpError) errors.push(err);
+
+      console.warn(`Admin login failed via ${endpoint}:`, err);
+      if (isHttpError) throw err;
+    }
+  }
+
+  const finalError = errors[errors.length - 1] || new Error("Unable to reach backend");
+  finalError.details = errors;
+  throw finalError;
+}
+
+
 function calcAvailable(tire) {
   return (tire.stock ?? 0) + (tire.showroom ?? 0) + (tire.basement ?? 0);
 }
@@ -392,22 +442,60 @@ function updateInventory(tire, location, value) {
   applyFilters();
 }
 
-function adminLogin() {
-  const login = window.prompt("Введіть логін адміністратора");
-  if (login === null) return;
+function hideAdminLoginError() {
+  adminLoginError.hidden = true;
+  adminLoginError.textContent = "";
+}
 
-  const password = window.prompt("Введіть пароль адміністратора");
-  if (password === null) return;
+function showAdminLoginError(message) {
+  adminLoginError.textContent = message;
+  adminLoginError.hidden = false;
+}
 
-  if (login === ADMIN_LOGIN && password === ADMIN_PASSWORD) {
+function openAdminLoginModal() {
+  hideAdminLoginError();
+  adminLoginForm.reset();
+  adminLoginModal.style.display = "flex";
+  adminLoginModal.setAttribute("aria-hidden", "false");
+  adminLoginInput.focus();
+}
+
+function closeAdminLoginModal() {
+  adminLoginModal.style.display = "none";
+  adminLoginModal.setAttribute("aria-hidden", "true");
+  adminLoginForm.reset();
+  hideAdminLoginError();
+}
+
+async function adminLogin(event) {
+  event.preventDefault();
+  hideAdminLoginError();
+
+  const login = adminLoginInput.value.trim();
+  const password = adminPasswordInput.value;
+
+  if (!login || !password) {
+    showAdminLoginError("Введіть логін та пароль");
+    return;
+  }
+
+  try {
+    await postAdminLogin({ login, password });
+
     isAdmin = true;
     localStorage.setItem(ADMIN_SESSION_KEY, "1");
     updateAdminUi();
     applyFilters();
-    return;
-  }
+    closeAdminLoginModal();
+  } catch (err) {
+    console.error("Admin login failed:", err);
 
-  alert("❌ Невірний логін або пароль адміністратора");
+    const errorText = typeof err?.message === "string" && err.message.trim()
+      ? err.message
+      : "Не вдалося увійти. Перевірте backend на http://127.0.0.1:3000";
+
+    showAdminLoginError(`❌ ${errorText}`);
+  }
 }
 
 function adminLogout() {
