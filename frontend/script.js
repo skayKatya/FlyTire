@@ -141,6 +141,7 @@ function renderTires(data) {
       const inventoryHtml = isAdmin
         ? `
           <div class="admin-stock-grid" data-tire-index="${tires.indexOf(tire)}">
+            <label>💲 Ціна <input type="number" min="0" step="0.01" data-location="price" value="${tire.price}"></label>
             <label>📦 Склад <input type="number" min="0" step="1" data-location="stock" value="${tire.stock}"></label>
             <label>🛒 Вітрина <input type="number" min="0" step="1" data-location="showroom" value="${tire.showroom}"></label>
             <label>🏢 Підвал <input type="number" min="0" step="1" data-location="basement" value="${tire.basement}"></label>
@@ -182,7 +183,7 @@ function renderTires(data) {
         const inputs = card.querySelectorAll(".admin-stock-grid input");
         inputs.forEach(input => {
           input.addEventListener("change", event => {
-            updateInventory(tire, event.target.dataset.location, event.target.value);
+            updateAdminTireField(tire, event.target.dataset.location, event.target.value);
           });
         });
       }
@@ -399,9 +400,18 @@ function updateAdminUi() {
   adminStatus.textContent = isAdmin ? "Admin mode" : "Гість";
 }
 
-function updateInventory(tire, location, value) {
-  const allowed = ["stock", "showroom", "basement"];
-  if (!isAdmin || !allowed.includes(location)) return;
+function updateAdminTireField(tire, location, value) {
+  if (!isAdmin) return;
+
+  if (location === "price") {
+    const amount = Number(value);
+    tire.price = Number.isFinite(amount) && amount >= 0 ? Number(amount.toFixed(2)) : 0;
+    applyFilters();
+    return;
+  }
+
+  const inventoryLocations = ["stock", "showroom", "basement"];
+  if (!inventoryLocations.includes(location)) return;
 
   const amount = Math.max(0, Math.floor(Number(value) || 0));
   tire[location] = amount;
