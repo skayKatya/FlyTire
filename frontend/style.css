@@ -72,28 +72,33 @@ body {
   --accent-border: rgba(255, 138, 38, .4);
   --focus-shadow: rgba(255, 141, 33, .18);
   display: flex;
-  flex-wrap: wrap;
-  gap: 12px;
-  justify-content: center;
+  flex-wrap: nowrap;
+  gap: 8px;
+  justify-content: flex-start;
   align-items: center;
-  padding: 22px;
+  padding: 14px;
   margin: 18px auto 0;
-  max-width: 1160px;
-  background: #fff;
-  border: 1px solid #efefef;
-  border-radius: 14px;
-  box-shadow: 0 12px 30px rgba(0, 0, 0, .05);
+  max-width: 1240px;
+  background: linear-gradient(160deg, #fefefe, #f8f8f8);
+  border: 1px solid #e6e6e6;
+  border-radius: 12px;
+  box-shadow: 0 10px 24px rgba(0, 0, 0, .05);
+  overflow-x: auto;
 }
 
 .filters input,
 .filters select {
-  padding: 10px 12px;
-  min-width: 120px;
-  font-size: 14px;
-  border: 1px solid #d7d7d7;
-  border-radius: 10px;
+  height: 38px;
+  padding: 8px 12px;
+  min-width: 102px;
+  font-size: 13px;
+  font-weight: 600;
+  text-transform: uppercase;
+  border: 1px solid #dadada;
+  border-radius: 8px;
   background: #fff;
   transition: border-color .2s ease, box-shadow .2s ease;
+  letter-spacing: .25px;
 }
 
 .filters input:focus,
@@ -104,18 +109,23 @@ body {
 }
 
 #searchInput {
-  min-width: 240px;
+  min-width: 190px;
 }
 
 .apply-btn {
   background: linear-gradient(150deg, var(--accent-start), var(--accent-end));
   color: #fff;
   border: 1px solid var(--accent-border);
-  border-radius: 10px;
-  padding: 11px 18px;
+  border-radius: 8px;
+  height: 38px;
+  padding: 8px 14px;
+  font-size: 12px;
   font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: .4px;
+  white-space: nowrap;
   cursor: pointer;
-  box-shadow: 0 9px 20px rgba(255, 130, 22, .28);
+  box-shadow: 0 8px 18px rgba(255, 130, 22, .25);
   transition: transform .2s ease, filter .2s ease;
 }
 
@@ -128,11 +138,16 @@ body {
   background: linear-gradient(150deg, #ff8f2f, #ffb258);
   color: #fff;
   border: 1px solid var(--accent-border);
-  border-radius: 10px;
-  padding: 11px 16px;
+  border-radius: 8px;
+  height: 38px;
+  padding: 8px 12px;
+  font-size: 12px;
   font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: .4px;
+  white-space: nowrap;
   cursor: pointer;
-  box-shadow: 0 9px 20px rgba(255, 130, 22, .2);
+  box-shadow: 0 8px 18px rgba(255, 130, 22, .2);
   transition: transform .2s ease, filter .2s ease;
 }
 
@@ -145,28 +160,29 @@ body {
   display: flex;
   align-items: center;
   gap: 6px;
-  padding: 9px 12px;
-  border-radius: 10px;
+  height: 38px;
+  padding: 8px 10px;
+  border-radius: 8px;
   border: 1px dashed #d9d9d9;
   background: #fcfcfc;
-  font-size: 14px;
+  font-size: 12px;
+  font-weight: 700;
+  text-transform: uppercase;
+  white-space: nowrap;
 }
 
 .in-stock input {
+  width: 14px;
+  height: 14px;
+  margin: 0;
   accent-color: #ff8a26;
 }
 
 @media (max-width: 760px) {
   .filters {
     margin: 14px 12px 0;
-    justify-content: stretch;
-  }
-
-  .filters input,
-  .filters select,
-  .filters button,
-  .in-stock {
-    width: 100%;
+    padding: 12px;
+    justify-content: flex-start;
   }
 }
 
