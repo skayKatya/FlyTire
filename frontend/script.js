@@ -176,8 +176,6 @@ function renderTires(data) {
 ====================== */
 const widthFilter = document.getElementById("widthFilter");
 const profileFilter = document.getElementById("profileFilter");
-const priceFrom = document.getElementById("priceFrom");
-const priceTo = document.getElementById("priceTo");
 const inStockFilter = document.getElementById("inStockFilter");
 const applyBtn = document.getElementById("applyFilters");
 const resetBtn = document.getElementById("resetFilters");
@@ -189,8 +187,6 @@ function applyFilters() {
   const radius = radiusFilter.value;
   const width = widthFilter.value;
   const profile = profileFilter.value;
-  const minPrice = Number(priceFrom.value);
-  const maxPrice = Number(priceTo.value);
   const inStockOnly = inStockFilter.checked;
 
   const filtered = tires.filter(tire => {
@@ -207,8 +203,6 @@ function applyFilters() {
     if (width && tire.width !== Number(width)) return false;
     if (profile && tire.profile !== Number(profile)) return false;
     if (inStockOnly && total <= 0) return false;
-    if (minPrice && tire.price < minPrice) return false;
-    if (maxPrice && tire.price > maxPrice) return false;
 
     return true;
   });
@@ -221,7 +215,7 @@ applyBtn.onclick = applyFilters;
 
 resetBtn.onclick = () => {
   document
-    .querySelectorAll(".filters input, .filters select")
+    .querySelectorAll('.filters input:not([type="checkbox"]), .filters select')
     .forEach(el => (el.value = ""));
   inStockFilter.checked = false;
   resultsCount.textContent = "";
