@@ -12,11 +12,11 @@ body {
 /* ===== HERO ===== */
 .hero {
   position: relative;
-  height:300px;
-  background:
-    linear-gradient(rgba(0,0,0,0.6), rgba(0,0,0,0.6)),
-    url("./images/landingPage/flyTireWeb1.png");
+  height:400px;
+  width: 100%;
+  background-image: url("./images/landingPage/flyTireWeb1.png");
   background-size: cover;
+  background-repeat: no-repeat;
   background-position: center;
   color: white;
   text-align: center;
