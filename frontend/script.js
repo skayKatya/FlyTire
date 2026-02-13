@@ -26,7 +26,6 @@ const checkoutForm = document.getElementById("checkoutForm");
 const adminPanel = document.getElementById("adminPanel");
 const adminLoginBtn = document.getElementById("adminLoginBtn");
 const adminLogoutBtn = document.getElementById("adminLogoutBtn");
-const adminStatus = document.getElementById("adminStatus");
 const adminLoginModal = document.getElementById("adminLoginModal");
 const closeAdminModal = document.getElementById("closeAdminModal");
 const adminLoginForm = document.getElementById("adminLoginForm");
@@ -424,7 +423,6 @@ function updateAdminUi() {
   adminPanel.hidden = !isAdmin;
   adminLoginBtn.hidden = isAdmin;
   adminLogoutBtn.hidden = !isAdmin;
-  adminStatus.textContent = isAdmin ? "Admin mode" : "Гість";
 }
 
 function updateInventory(tire, location, value) {
