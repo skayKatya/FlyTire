@@ -23,6 +23,42 @@ body {
   padding: 80px 20px;
 }
 
+.logo {
+  position: absolute;
+  top: 16px;
+  left: 16px;
+  width: 180px;
+  max-width: 45vw;
+  height: auto;
+}
+
+.header-contacts {
+  position: absolute;
+  bottom: 16px;
+  left: 16px;
+  display: block;
+  padding: 8px 12px;
+  border-radius: 12px;
+  background: rgba(0, 0, 0, .42);
+  backdrop-filter: blur(4px);
+  text-align: left;
+}
+
+.header-contacts p {
+  margin: 0;
+  font-weight: 700;
+}
+
+.header-contacts,
+.header-contacts a {
+  color: #ff8a26;
+  text-decoration: none;
+}
+
+.header-contacts a:hover {
+  text-decoration: underline;
+}
+
 .admin-auth {
   position: absolute;
   top: 18px;
