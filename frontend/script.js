@@ -342,7 +342,7 @@ async function postOrder(payload) {
       error.endpoint = endpoint;
       errors.push(error);
 
-      if (res.status >= 500 || res.status === 404) {
+      if (res.status >= 500 || res.status === 404 || res.status === 405) {
         console.warn(`Order submit failed via ${endpoint}:`, error);
         continue;
       }
@@ -387,7 +387,7 @@ async function postAdminLogin(credentials) {
       error.endpoint = endpoint;
       errors.push(error);
 
-      if (res.status >= 500 || res.status === 404) {
+      if (res.status >= 500 || res.status === 404 || res.status === 405) {
         console.warn(`Admin login failed via ${endpoint}:`, error);
         continue;
       }
