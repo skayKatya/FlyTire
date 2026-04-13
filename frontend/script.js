@@ -101,7 +101,7 @@ function renderTires(data) {
 
     /* LIST */
     const list = document.createElement("div");
-    list.className = "tire-list";
+    list.className = "tire-list collapsed";
 
     seasonTires.forEach(tire => {
       const total =
