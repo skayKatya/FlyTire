@@ -162,7 +162,10 @@ function renderTires(data) {
       }
     });
 
-    header.onclick = () => list.classList.toggle("collapsed");
+    header.onclick = () => {
+      list.classList.toggle("collapsed");
+      header.classList.toggle("expanded", !list.classList.contains("collapsed"));
+    };
 
     gallery.appendChild(header);
     gallery.appendChild(list);
