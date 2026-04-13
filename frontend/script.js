@@ -101,7 +101,7 @@ function renderTires(data) {
 
     /* LIST */
     const list = document.createElement("div");
-    list.className = "tire-list";
+    list.className = "tire-list collapsed";
 
     seasonTires.forEach(tire => {
       const total =
@@ -162,7 +162,10 @@ function renderTires(data) {
       }
     });
 
-    header.onclick = () => list.classList.toggle("collapsed");
+    header.onclick = () => {
+      list.classList.toggle("collapsed");
+      header.classList.toggle("expanded", !list.classList.contains("collapsed"));
+    };
 
     gallery.appendChild(header);
     gallery.appendChild(list);
