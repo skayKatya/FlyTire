@@ -44,6 +44,12 @@ body {
   text-align: left;
 }
 
+.tg-mini {
+  width: 16px;
+  height: 16px;
+  display: block;
+}
+
 .header-contacts p {
   margin: 0;
   font-weight: 700;
