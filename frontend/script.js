@@ -1,16 +1,9 @@
 /* ======================
    DATA
 ====================== */
-import { winterTires } from "./data/winter.js";
-import { summerTires } from "./data/summer.js";
-import { allSeasonTires } from "./data/allSeason.js";
+import { loadTires } from "./data/tires.js";
 
-/* обʼєднуємо всі дані */
-const tires = [
-  ...winterTires,
-  ...summerTires,
-  ...allSeasonTires
-];
+let tires = [];
 
 /* ======================
    ELEMENTS
@@ -183,6 +176,30 @@ const applyBtn = document.getElementById("applyFilters");
 const resetBtn = document.getElementById("resetFilters");
 const resultsCount = document.getElementById("resultsCount");
 
+function getSeasonStats(items) {
+  return items.reduce(
+    (stats, tire) => {
+      if (tire.season === "winter") stats.winter += 1;
+      if (["summer", "all-season"].includes(tire.season)) stats.summerAll += 1;
+      return stats;
+    },
+    { winter: 0, summerAll: 0 }
+  );
+}
+
+function renderResultsSummary(filtered) {
+  const { winter, summerAll } = getSeasonStats(filtered);
+
+  if (!filtered.length) {
+    resultsCount.textContent = "За цими параметрами шини не знайдено.";
+    return;
+  }
+
+  resultsCount.textContent =
+    `Знайдено шин: ${filtered.length} (❄️ Зима: ${winter}, ☀️🌿 Літо + Всесезонні: ${summerAll}). ` +
+    "Списки нижче згорнуті — відкрийте потрібний сезон, щоб переглянути моделі.";
+}
+
 function applyFilters() {
   const search = searchInput.value.toLowerCase();
   const season = seasonFilter.value;
@@ -209,31 +226,24 @@ function applyFilters() {
     return true;
   });
 
-  resultsCount.textContent = `Знайдено шин: ${filtered.length}`;
+  renderResultsSummary(filtered);
   renderTires(filtered);
 }
 
-applyBtn.onclick = applyFilters;
+applyBtn.addEventListener("click", applyFilters);
 
 resetBtn.onclick = () => {
   document
     .querySelectorAll('.filters input:not([type="checkbox"]), .filters select')
     .forEach(el => (el.value = ""));
   inStockFilter.checked = false;
-  resultsCount.textContent = "";
+  resultsCount.textContent = "Параметри очищено. Показано всі шини.";
   renderTires(tires);
 };
-
-searchInput.oninput = applyFilters;
-seasonFilter.onchange = applyFilters;
-radiusFilter.onchange = applyFilters;
 
 /* ======================
    EVENTS
 ====================== */
-searchInput.addEventListener("input", applyFilters);
-seasonFilter.addEventListener("change", applyFilters);
-radiusFilter.addEventListener("change", applyFilters);
 adminLoginBtn.addEventListener("click", openAdminLoginModal);
 adminLogoutBtn.addEventListener("click", adminLogout);
 closeAdminModal.addEventListener("click", closeAdminLoginModal);
@@ -708,4 +718,17 @@ checkoutForm.onsubmit = async e => {
    INIT
 ====================== */
 updateAdminUi();
-renderTires(tires);
+
+async function initApp() {
+  try {
+    tires = await loadTires();
+    renderTires(tires);
+    resultsCount.textContent = `Завантажено моделей: ${tires.length}`;
+  } catch (error) {
+    console.error("Failed to load tires:", error);
+    resultsCount.textContent = "❌ Не вдалося завантажити список шин.";
+    renderTires([]);
+  }
+}
+
+initApp();
