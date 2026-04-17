@@ -1,16 +1,9 @@
 /* ======================
    DATA
 ====================== */
-import { winterTires } from "./data/winter.js";
-import { summerTires } from "./data/summer.js";
-import { allSeasonTires } from "./data/allSeason.js";
+import { loadTires } from "./data/tires.js";
 
-/* обʼєднуємо всі дані */
-const tires = [
-  ...winterTires,
-  ...summerTires,
-  ...allSeasonTires
-];
+let tires = [];
 
 /* ======================
    ELEMENTS
@@ -725,4 +718,17 @@ checkoutForm.onsubmit = async e => {
    INIT
 ====================== */
 updateAdminUi();
-renderTires(tires);
+
+async function initApp() {
+  try {
+    tires = await loadTires();
+    renderTires(tires);
+    resultsCount.textContent = `Завантажено моделей: ${tires.length}`;
+  } catch (error) {
+    console.error("Failed to load tires:", error);
+    resultsCount.textContent = "❌ Не вдалося завантажити список шин.";
+    renderTires([]);
+  }
+}
+
+initApp();
