@@ -89,7 +89,34 @@ function parseCsvToTires(csvText) {
   return parsed;
 }
 
-export async function loadTires() {
+function resolveApiBase() {
+  const { hostname, port, protocol } = window.location;
+  const isLocalHost = ["localhost", "127.0.0.1"].includes(hostname);
+
+  if (protocol === "file:") return "http://127.0.0.1:3000";
+  if (isLocalHost && port !== "3000") return "http://127.0.0.1:3000";
+  return "";
+}
+
+async function loadTiresFromApi() {
+  const apiBase = resolveApiBase();
+  const response = await fetch(`${apiBase}/api/tires`);
+  if (!response.ok) {
+    throw new Error(`Не вдалося завантажити прайс з пошти: ${response.status}`);
+  }
+
+  const payload = await response.json();
+  if (!Array.isArray(payload?.tires)) {
+    throw new Error("Формат відповіді /api/tires неочікуваний");
+  }
+
+  return payload.tires.map(tire => ({
+    ...tire,
+    image: tire.image || DEFAULT_IMAGE
+  }));
+}
+
+async function loadTiresFromCsv() {
   const response = await fetch(CSV_PATH);
   if (!response.ok) {
     throw new Error(`Не вдалося завантажити ${CSV_PATH}: ${response.status}`);
@@ -97,4 +124,13 @@ export async function loadTires() {
 
   const csvText = await response.text();
   return parseCsvToTires(csvText);
+}
+
+export async function loadTires() {
+  try {
+    return await loadTiresFromApi();
+  } catch (error) {
+    console.warn("Не вдалося завантажити прайс з пошти, використовую локальний CSV:", error);
+    return loadTiresFromCsv();
+  }
 }
