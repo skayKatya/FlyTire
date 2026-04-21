@@ -17,8 +17,6 @@ const COUNTER_FILE = path.join(__dirname, "orderCounter.json");
 ====================== */
 const BOT_TOKEN = process.env.BOT_TOKEN;
 const CHAT_ID = process.env.CHAT_ID;
-const ADMIN_LOGIN = process.env.ADMIN_LOGIN || "admin";
-const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD || "flytire-admin";
 
 if (!BOT_TOKEN || !CHAT_ID) {
   console.error("❌ Missing BOT_TOKEN or CHAT_ID in backend/.env");
@@ -214,20 +212,7 @@ app.post("/api/order", async (req, res) => {
   }
 });
 
-app.post("/api/admin/login", (req, res) => {
-  const login = String(req.body?.login || "").trim();
-  const password = String(req.body?.password || "");
 
-  if (!login || !password) {
-    return res.status(400).json({ success: false, error: "Missing credentials" });
-  }
-
-  if (login === ADMIN_LOGIN && password === ADMIN_PASSWORD) {
-    return res.json({ success: true });
-  }
-
-  return res.status(401).json({ success: false, error: "Invalid credentials" });
-});
 
 app.get(/.*/, (req, res) => {
   res.sendFile(path.join(FRONTEND_DIR, "index.html"));
