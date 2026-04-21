@@ -19,6 +19,10 @@ function detectSeason(description, sectionSeason) {
   const text = description.toLowerCase();
 
   if (sectionSeason === "winter") return "winter";
+  if (sectionSeason === "moto") return "moto";
+  if (text.includes("мото") || text.includes("moto") || text.includes("scooter")) {
+    return "moto";
+  }
   if (text.includes("allseason") || text.includes("all season") || text.includes("4 season")) {
     return "all-season";
   }
@@ -74,6 +78,10 @@ function parseCsvToTires(csvText) {
   lines.forEach(line => {
     if (/літо-?всесезонні/i.test(line)) {
       sectionSeason = "summer";
+      return;
+    }
+    if (/мото/i.test(line)) {
+      sectionSeason = "moto";
       return;
     }
     if (/зим/i.test(line)) {

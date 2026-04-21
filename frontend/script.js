@@ -62,6 +62,13 @@ function renderTires(data) {
       icon: "🌿",
       class: "season-all-season",
       matches: ["all-season"]
+    },
+    {
+      key: "moto",
+      title: "Мотошини",
+      icon: "🏍️",
+      class: "season-moto",
+      matches: ["moto"]
     }
   ];
 
@@ -105,7 +112,15 @@ function renderTires(data) {
           </p>
 
           <p class="season-type">
-            ${tire.season === "all-season" ? "🌿 Всесезонні" : tire.season === "summer" ? "☀️ Літні" : "❄️ Зимові"}
+            ${
+  tire.season === "all-season"
+    ? "🌿 Всесезонні"
+    : tire.season === "summer"
+      ? "☀️ Літні"
+      : tire.season === "moto"
+        ? "🏍️ Мотошини"
+        : "❄️ Зимові"
+}
           </p>
 
           <p class="price">
@@ -154,14 +169,15 @@ function getSeasonStats(items) {
       if (tire.season === "winter") stats.winter += 1;
       if (tire.season === "summer") stats.summer += 1;
       if (tire.season === "all-season") stats.allSeason += 1;
+      if (tire.season === "moto") stats.moto += 1;
       return stats;
     },
-    { winter: 0, summer: 0, allSeason: 0 }
+    { winter: 0, summer: 0, allSeason: 0, moto: 0 }
   );
 }
 
 function renderResultsSummary(filtered) {
-  const { winter, summer, allSeason } = getSeasonStats(filtered);
+  const { winter, summer, allSeason, moto } = getSeasonStats(filtered);
 
   if (!filtered.length) {
     resultsCount.textContent = "За цими параметрами шини не знайдено.";
@@ -169,7 +185,7 @@ function renderResultsSummary(filtered) {
   }
 
   resultsCount.textContent =
-    `Знайдено шин: ${filtered.length} (❄️ Зима: ${winter}, ☀️ Літо: ${summer}, 🌿 Всесезонні: ${allSeason}). ` +
+    `Знайдено шин: ${filtered.length} (❄️ Зима: ${winter}, ☀️ Літо: ${summer}, 🌿 Всесезонні: ${allSeason}, 🏍️ Мотошини: ${moto}). ` +
     "Списки нижче згорнуті — відкрийте потрібний сезон, щоб переглянути моделі.";
 }
 
@@ -192,6 +208,7 @@ function applyFilters() {
     if (season === "winter" && tire.season !== "winter") return false;
     if (season === "summer" && tire.season !== "summer") return false;
     if (season === "all-season" && tire.season !== "all-season") return false;
+    if (season === "moto" && tire.season !== "moto") return false;
     if (radius && tire.radius !== Number(radius)) return false;
     if (width && tire.width !== Number(width)) return false;
     if (profile && tire.profile !== Number(profile)) return false;
