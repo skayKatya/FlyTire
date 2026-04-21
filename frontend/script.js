@@ -55,6 +55,13 @@ function renderTires(data) {
       icon: "☀️",
       class: "season-summer",
       matches: ["summer", "all-season"]
+    },
+    {
+      key: "moto",
+      title: "Мотошини",
+      icon: "🏍️",
+      class: "season-all-season",
+      matches: ["moto"]
     }
   ];
 
@@ -185,6 +192,7 @@ function applyFilters() {
     if (search && !title.includes(search)) return false;
     if (season === "winter" && tire.season !== "winter") return false;
     if (season === "summer-all-season" && !["summer", "all-season"].includes(tire.season)) return false;
+    if (season === "moto" && tire.season !== "moto") return false;
     if (radius && tire.radius !== Number(radius)) return false;
     if (width && tire.width !== Number(width)) return false;
     if (profile && tire.profile !== Number(profile)) return false;
