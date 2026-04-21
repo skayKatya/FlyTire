@@ -105,7 +105,13 @@ function renderTires(data) {
           </p>
 
           <p class="season-type">
-            ${tire.season === "all-season" ? "🌿 Всесезонні" : tire.season === "summer" ? "☀️ Літні" : "❄️ Зимові"}
+            ${tire.season === "all-season"
+    ? "🌿 Всесезонні"
+    : tire.season === "summer"
+      ? "☀️ Літні"
+      : tire.season === "moto"
+        ? "🏍️ Мотошини"
+        : "❄️ Зимові"}
           </p>
 
           <p class="price">
@@ -154,14 +160,15 @@ function getSeasonStats(items) {
       if (tire.season === "winter") stats.winter += 1;
       if (tire.season === "summer") stats.summer += 1;
       if (tire.season === "all-season") stats.allSeason += 1;
+      if (tire.season === "moto") stats.moto += 1;
       return stats;
     },
-    { winter: 0, summer: 0, allSeason: 0 }
+    { winter: 0, summer: 0, allSeason: 0, moto: 0 }
   );
 }
 
 function renderResultsSummary(filtered) {
-  const { winter, summer, allSeason } = getSeasonStats(filtered);
+  const { winter, summer, allSeason, moto } = getSeasonStats(filtered);
   const summerAndAllSeason = summer + allSeason;
 
   if (!filtered.length) {
@@ -170,7 +177,7 @@ function renderResultsSummary(filtered) {
   }
 
   resultsCount.textContent =
-    `Знайдено шин: ${filtered.length} (❄️ Зима: ${winter}, ☀️/🌿 Літо + Всесезонні: ${summerAndAllSeason}). ` +
+    `Знайдено шин: ${filtered.length} (❄️ Зима: ${winter}, ☀️/🌿 Літо + Всесезонні: ${summerAndAllSeason}, 🏍️ Мото: ${moto}). ` +
     "Списки нижче згорнуті — відкрийте потрібний сезон, щоб переглянути моделі.";
 }
 
