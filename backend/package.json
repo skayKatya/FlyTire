@@ -13,6 +13,9 @@
     "cors": "^2.8.5",
     "dotenv": "^17.2.3",
     "express": "^5.2.1",
-    "node-fetch": "^3.3.2"
+    "imapflow": "^1.1.1",
+    "mailparser": "^3.7.5",
+    "node-fetch": "^3.3.2",
+    "xlsx": "^0.18.5"
   }
 }
