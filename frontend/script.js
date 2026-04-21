@@ -50,18 +50,18 @@ function renderTires(data) {
       matches: ["winter"]
     },
     {
-      key: "summer",
-      title: "Літні шини",
+      key: "summer-all-season",
+      title: "Літні / Всесезонні шини",
       icon: "☀️",
       class: "season-summer",
-      matches: ["summer"]
+      matches: ["summer", "all-season"]
     },
     {
-      key: "all-season",
-      title: "Всесезонні шини",
-      icon: "🌿",
+      key: "moto",
+      title: "Мотошини",
+      icon: "🏍️",
       class: "season-all-season",
-      matches: ["all-season"]
+      matches: ["moto"]
     }
   ];
 
@@ -162,6 +162,7 @@ function getSeasonStats(items) {
 
 function renderResultsSummary(filtered) {
   const { winter, summer, allSeason } = getSeasonStats(filtered);
+  const summerAndAllSeason = summer + allSeason;
 
   if (!filtered.length) {
     resultsCount.textContent = "За цими параметрами шини не знайдено.";
@@ -169,7 +170,7 @@ function renderResultsSummary(filtered) {
   }
 
   resultsCount.textContent =
-    `Знайдено шин: ${filtered.length} (❄️ Зима: ${winter}, ☀️ Літо: ${summer}, 🌿 Всесезонні: ${allSeason}). ` +
+    `Знайдено шин: ${filtered.length} (❄️ Зима: ${winter}, ☀️/🌿 Літо + Всесезонні: ${summerAndAllSeason}). ` +
     "Списки нижче згорнуті — відкрийте потрібний сезон, щоб переглянути моделі.";
 }
 
@@ -190,8 +191,8 @@ function applyFilters() {
 
     if (search && !title.includes(search)) return false;
     if (season === "winter" && tire.season !== "winter") return false;
-    if (season === "summer" && tire.season !== "summer") return false;
-    if (season === "all-season" && tire.season !== "all-season") return false;
+    if (season === "summer-all-season" && !["summer", "all-season"].includes(tire.season)) return false;
+    if (season === "moto" && tire.season !== "moto") return false;
     if (radius && tire.radius !== Number(radius)) return false;
     if (width && tire.width !== Number(width)) return false;
     if (profile && tire.profile !== Number(profile)) return false;
