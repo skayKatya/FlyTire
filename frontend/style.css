@@ -323,8 +323,12 @@ body {
   background: #e8f1ff;
 }
 
-.season-summer-all {
-  background: linear-gradient(90deg, #fff4e0, #eaf7ec);
+.season-summer {
+  background: #fff4e0;
+}
+
+.season-all-season {
+  background: #eaf7ec;
 }
 
 .season-type {
