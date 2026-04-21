@@ -16,19 +16,6 @@ const radiusFilter = document.getElementById("radiusFilter");
 const modal = document.getElementById("checkoutModal");
 const closeModal = document.getElementById("closeModal");
 const checkoutForm = document.getElementById("checkoutForm");
-const adminPanel = document.getElementById("adminPanel");
-const adminLoginBtn = document.getElementById("adminLoginBtn");
-const adminLogoutBtn = document.getElementById("adminLogoutBtn");
-const adminLoginModal = document.getElementById("adminLoginModal");
-const closeAdminModal = document.getElementById("closeAdminModal");
-const adminLoginForm = document.getElementById("adminLoginForm");
-const adminLoginInput = document.getElementById("adminLoginInput");
-const adminPasswordInput = document.getElementById("adminPasswordInput");
-const adminLoginError = document.getElementById("adminLoginError");
-
-const ADMIN_SESSION_KEY = "flytire_admin_logged_in";
-
-let isAdmin = localStorage.getItem(ADMIN_SESSION_KEY) === "1";
 
 function shouldSilenceUnhandledRejection(reason) {
   if (!reason) return false;
@@ -53,10 +40,6 @@ window.addEventListener("unhandledrejection", event => {
 ====================== */
 function renderTires(data) {
   gallery.innerHTML = "";
-  adminPanel.innerHTML = `
-    <h2>Панель адміністратора</h2>
-    <p>Редагуйте залишки по локаціях: Склад, Вітрина, Підвал.</p>
-  `;
 
   const seasons = [
     {
@@ -79,8 +62,6 @@ function renderTires(data) {
     const seasonTires = data.filter(t => season.matches.includes(t.season));
     if (!seasonTires.length) return;
 
-    const seasonCount = seasonTires.reduce((sum, t) => sum + t.stock + t.showroom + t.basement, 0);
-
     /* HEADER */
     const header = document.createElement("div");
     header.className = `season-header ${season.class}`;
@@ -89,7 +70,7 @@ function renderTires(data) {
         <span class="season-icon">${season.icon}</span>
         <span>${season.title}</span>
       </div>
-      <span class="season-count">${isAdmin ? `${seasonCount} шт.` : `${seasonTires.length} моделей`}</span>
+      <span class="season-count">${seasonTires.length} моделей</span>
     `;
 
     /* LIST */
@@ -105,15 +86,7 @@ function renderTires(data) {
       const card = document.createElement("div");
       card.className = "card";
       const availabilityText = total > 0 ? "✅ В наявності" : "❌ Немає в наявності";
-      const inventoryHtml = isAdmin
-        ? `
-          <div class="admin-stock-grid" data-tire-index="${tires.indexOf(tire)}">
-            <label>📦 Склад <input type="number" min="0" step="1" data-location="stock" value="${tire.stock}"></label>
-            <label>🛒 Вітрина <input type="number" min="0" step="1" data-location="showroom" value="${tire.showroom}"></label>
-            <label>🏢 Підвал <input type="number" min="0" step="1" data-location="basement" value="${tire.basement}"></label>
-          </div>
-        `
-        : `<p>${availabilityText}</p>`;
+      const inventoryHtml = `<p>${availabilityText}</p>`;
 
       card.innerHTML = `
         <img src="${tire.image}" alt="${tire.brand} ${tire.model}">
@@ -145,14 +118,6 @@ function renderTires(data) {
       card.appendChild(buyBtn);
       list.appendChild(card);
 
-      if (isAdmin) {
-        const inputs = card.querySelectorAll(".admin-stock-grid input");
-        inputs.forEach(input => {
-          input.addEventListener("change", event => {
-            updateInventory(tire, event.target.dataset.location, event.target.value);
-          });
-        });
-      }
     });
 
     header.onclick = () => {
@@ -240,14 +205,6 @@ resetBtn.onclick = () => {
   resultsCount.textContent = "Параметри очищено. Показано всі шини.";
   renderTires(tires);
 };
-
-/* ======================
-   EVENTS
-====================== */
-adminLoginBtn.addEventListener("click", openAdminLoginModal);
-adminLogoutBtn.addEventListener("click", adminLogout);
-closeAdminModal.addEventListener("click", closeAdminLoginModal);
-adminLoginForm.addEventListener("submit", adminLogin);
 
 /* ======================
    CHECKOUT MODAL
@@ -378,48 +335,6 @@ async function postOrder(payload) {
   throw finalError;
 }
 
-async function postAdminLogin(credentials) {
-  const candidates = buildApiCandidates();
-  const errors = [];
-
-  for (const base of candidates) {
-    const endpoint = `${base}/api/admin/login`;
-
-    try {
-      const res = await fetch(endpoint, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(credentials)
-      });
-
-      if (res.ok) return res;
-
-      const message = await readErrorMessage(res);
-      const error = new Error(message);
-      error.status = res.status;
-      error.endpoint = endpoint;
-      errors.push(error);
-
-      if (res.status >= 500 || res.status === 404 || res.status === 405) {
-        console.warn(`Admin login failed via ${endpoint}:`, error);
-        continue;
-      }
-
-      throw error;
-    } catch (err) {
-      const status = Number(err?.status);
-      const isHttpError = Number.isFinite(status);
-      if (!isHttpError) errors.push(err);
-
-      console.warn(`Admin login failed via ${endpoint}:`, err);
-      if (isHttpError) throw err;
-    }
-  }
-
-  const finalError = errors[errors.length - 1] || new Error("Unable to reach backend");
-  finalError.details = errors;
-  throw finalError;
-}
 
 
 function calcAvailable(tire) {
@@ -432,83 +347,6 @@ function formatMoney(value) {
   return `${n.toFixed(2)} $`;
 }
 
-function updateAdminUi() {
-  adminPanel.hidden = !isAdmin;
-  adminLoginBtn.hidden = isAdmin;
-  adminLogoutBtn.hidden = !isAdmin;
-}
-
-function updateInventory(tire, location, value) {
-  const allowed = ["stock", "showroom", "basement"];
-  if (!isAdmin || !allowed.includes(location)) return;
-
-  const amount = Math.max(0, Math.floor(Number(value) || 0));
-  tire[location] = amount;
-  applyFilters();
-}
-
-function hideAdminLoginError() {
-  adminLoginError.hidden = true;
-  adminLoginError.textContent = "";
-}
-
-function showAdminLoginError(message) {
-  adminLoginError.textContent = message;
-  adminLoginError.hidden = false;
-}
-
-function openAdminLoginModal() {
-  hideAdminLoginError();
-  adminLoginForm.reset();
-  adminLoginModal.style.display = "flex";
-  adminLoginModal.setAttribute("aria-hidden", "false");
-  adminLoginInput.focus();
-}
-
-function closeAdminLoginModal() {
-  adminLoginModal.style.display = "none";
-  adminLoginModal.setAttribute("aria-hidden", "true");
-  adminLoginForm.reset();
-  hideAdminLoginError();
-}
-
-async function adminLogin(event) {
-  event.preventDefault();
-  hideAdminLoginError();
-
-  const login = adminLoginInput.value.trim();
-  const password = adminPasswordInput.value;
-
-  if (!login || !password) {
-    showAdminLoginError("Введіть логін та пароль");
-    return;
-  }
-
-  try {
-    await postAdminLogin({ login, password });
-
-    isAdmin = true;
-    localStorage.setItem(ADMIN_SESSION_KEY, "1");
-    updateAdminUi();
-    applyFilters();
-    closeAdminLoginModal();
-  } catch (err) {
-    console.error("Admin login failed:", err);
-
-    const errorText = typeof err?.message === "string" && err.message.trim()
-      ? err.message
-      : "Не вдалося увійти. Перевірте backend на http://127.0.0.1:3000";
-
-    showAdminLoginError(`❌ ${errorText}`);
-  }
-}
-
-function adminLogout() {
-  isAdmin = false;
-  localStorage.removeItem(ADMIN_SESSION_KEY);
-  updateAdminUi();
-  applyFilters();
-}
 
 
 function normalizeQuantity({ clampToAvailable = false } = {}) {
@@ -562,7 +400,7 @@ function openCheckout(tire) {
   summaryTire.textContent = `${tire.brand} ${tire.model}`;
   summarySize.textContent = `${tire.width}/${tire.profile} R${tire.radius} ${tire.loadIndex ?? ""}`.trim();
   summaryPrice.textContent = formatMoney(tire.price);
-  summaryAvailable.textContent = isAdmin ? `${available} шт.` : (available > 0 ? "Є в наявності" : "Немає в наявності");
+  summaryAvailable.textContent = available > 0 ? "Є в наявності" : "Немає в наявності";
 
   // налаштування кількості
   qtyInput.min = "1";
@@ -632,16 +470,8 @@ window.onclick = e => {
     phoneInput.value = PHONE_PREFIX;
   }
 
-  if (e.target === adminLoginModal) {
-    closeAdminLoginModal();
-  }
 };
 
-window.addEventListener("keydown", event => {
-  if (event.key === "Escape" && adminLoginModal.style.display === "flex") {
-    closeAdminLoginModal();
-  }
-});
 
 checkoutForm.onsubmit = async e => {
   e.preventDefault();
@@ -717,8 +547,6 @@ checkoutForm.onsubmit = async e => {
 /* ======================
    INIT
 ====================== */
-updateAdminUi();
-
 async function initApp() {
   try {
     tires = await loadTires();

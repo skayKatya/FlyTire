@@ -65,47 +65,6 @@ body {
   text-decoration: underline;
 }
 
-.admin-auth {
-  position: absolute;
-  top: 18px;
-  right: 22px;
-  display: flex;
-  justify-content: flex-end;
-  align-items: center;
-  gap: 10px;
-  flex-wrap: wrap;
-  padding: 8px 10px;
-  border-radius: 12px;
-  background: rgba(0, 0, 0, .42);
-  backdrop-filter: blur(4px);
-}
-
-.admin-btn {
-  border: 1px solid rgba(255, 157, 28, .65);
-  background: linear-gradient(150deg, rgba(255, 120, 15, .92), rgba(255, 167, 70, .9));
-  box-shadow: 0 8px 20px rgba(255, 133, 0, .28);
-  color: #fff;
-  font-weight: 700;
-  padding: 9px 14px;
-  border-radius: 8px;
-  cursor: pointer;
-  transition: transform .2s ease, filter .2s ease;
-}
-
-.admin-btn:hover {
-  transform: translateY(-1px);
-  filter: brightness(1.05);
-}
-
-.admin-status {
-  font-size: 13px;
-  opacity: 1;
-  color: #ffe9cf;
-  border: 1px solid rgba(255, 158, 44, .45);
-  border-radius: 999px;
-  padding: 6px 10px;
-  background: rgba(255, 132, 10, .16);
-}
 
 .hero h1 {
   position: absolute;
@@ -246,41 +205,6 @@ body {
   opacity: 0.7;
 }
 
-.admin-panel {
-  max-width: 1100px;
-  margin: 4px auto 0;
-  padding: 0 20px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 10px;
-  flex-wrap: nowrap;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-}
-
-.admin-panel h2 {
-  margin: 0;
-  font-size: 14px;
-  line-height: 1.2;
-}
-
-.admin-panel p {
-  margin: 0;
-  font-size: 12px;
-  line-height: 1.2;
-  opacity: .75;
-}
-
-
-@media (max-width: 760px) {
-  .admin-panel {
-    flex-wrap: wrap;
-    white-space: normal;
-    row-gap: 4px;
-  }
-}
 
 /* ===== GALLERY / SECTIONS ===== */
 
@@ -336,24 +260,6 @@ body {
   flex-direction: column;
 }
 
-.admin-stock-grid {
-  display: grid;
-  gap: 8px;
-  margin-top: 6px;
-}
-
-.admin-stock-grid label {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  gap: 10px;
-  font-size: 14px;
-}
-
-.admin-stock-grid input {
-  width: 90px;
-  padding: 4px 8px;
-}
 
 .price {
   color: #d60000;
@@ -568,115 +474,7 @@ body {
   font-weight: 700;
 }
 
-.admin-modal-content {
-  max-width: 470px;
-  background:
-    radial-gradient(circle at top right, rgba(255, 161, 71, .24), transparent 45%),
-    linear-gradient(160deg, #1a130b, #080808 72%);
-  border: 1px solid #ff9221;
-  color: #fff;
-  box-shadow: 0 18px 48px rgba(0, 0, 0, .5), 0 0 0 1px rgba(255, 147, 44, .12) inset;
-}
 
-.admin-modal-header {
-  display: flex;
-  gap: 12px;
-  align-items: flex-start;
-  margin-bottom: 10px;
-}
-
-.admin-modal-header h2 {
-  margin: 0;
-  color: #ffab49;
-  letter-spacing: .3px;
-}
-
-.admin-modal-header p {
-  margin: 4px 0 0;
-  font-size: 13px;
-  opacity: .88;
-  color: #ffd5a1;
-  line-height: 1.4;
-}
-
-.admin-modal-icon {
-  width: 48px;
-  height: 48px;
-  border-radius: 12px;
-  display: grid;
-  place-items: center;
-  font-size: 22px;
-  background: linear-gradient(160deg, #ff7a00, #ffb14b);
-  color: #111;
-  box-shadow: 0 8px 22px rgba(255, 122, 0, .35);
-}
-
-.admin-modal-content .close {
-  background: #271b12;
-  color: #ff9a1f;
-  border: 1px solid #ff9c38;
-}
-
-.admin-modal-content .close:hover {
-  background: #343434;
-}
-
-.admin-login-form {
-  display: grid;
-  gap: 10px;
-}
-
-.admin-login-form .field span {
-  color: #ffc57f;
-}
-
-.admin-login-form .field input {
-  background: #17110b;
-  color: #fff;
-  border: 1px solid #5a3711;
-}
-
-.admin-login-form .field input::placeholder {
-  color: #b3b3b3;
-}
-
-.admin-login-form .field input:focus {
-  border-color: #ff8a00;
-  box-shadow: 0 0 0 3px rgba(255, 138, 0, .2);
-}
-
-.admin-login-error {
-  margin: 0;
-  background: rgba(255, 138, 0, .12);
-  color: #ffb866;
-  border: 1px solid rgba(255, 138, 0, .5);
-  border-radius: 10px;
-  padding: 8px 10px;
-  font-size: 13px;
-}
-
-.admin-submit-btn {
-  background: linear-gradient(160deg, #ff7a00, #ffb347);
-  color: #111;
-  box-shadow: 0 10px 20px rgba(255, 140, 26, .28);
-}
-
-.admin-submit-btn:hover {
-  filter: brightness(1.04);
-}
-
-@media (max-width: 760px) {
-  .admin-auth {
-    top: 12px;
-    right: 12px;
-    left: 12px;
-    justify-content: center;
-  }
-
-  .hero {
-    padding-top: 120px;
-  }
-}
 
 /* ===== FOOTER ===== */
 .footer {
