@@ -97,15 +97,12 @@ function parseCsvToTires(csvText) {
 }
 
 function resolveApiBase() {
-  const { protocol, hostname, port } = window.location;
+  const { protocol } = window.location;
 
+  // For local file previews, use the local backend explicitly.
   if (protocol === "file:") return "http://127.0.0.1:3000";
 
-  const isLocalhost = hostname === "127.0.0.1" || hostname === "localhost";
-  if (isLocalhost && port && port !== "3000") {
-    return "http://127.0.0.1:3000";
-  }
-
+  // In all hosted/dev-server cases, prefer same-origin API path.
   return "";
 }
 
