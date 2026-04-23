@@ -355,7 +355,10 @@ async function postOrder(payload) {
       const status = Number(err?.status);
       const isHttpError = Number.isFinite(status);
       if (!isHttpError) {
-        errors.push(err);
+        const networkError = new Error(`Network error @ ${endpoint}`);
+        networkError.endpoint = endpoint;
+        networkError.cause = err;
+        errors.push(networkError);
       }
 
       console.warn(`Order submit failed via ${endpoint}:`, err);
@@ -569,9 +572,11 @@ checkoutForm.onsubmit = async e => {
     const backendHint =
       "Перевірте, що backend запущений на http://127.0.0.1:3000 або http://localhost:3000";
     const errorText = typeof err?.message === "string" ? err.message.split(" @ ")[0] : "";
+    const isNetworkError =
+      errorText.toLowerCase() === "failed to fetch" || errorText.toLowerCase() === "network error";
 
     alert(
-      errorText
+      errorText && !isNetworkError
         ? `❌ Замовлення не відправлено: ${errorText}`
         : `❌ Замовлення не відправлено. ${backendHint}`
     );
