@@ -240,11 +240,27 @@ const qtyPlusBtn = document.getElementById("qtyPlus");
 const nameInput = checkoutForm.querySelector('input[name="name"]');
 const phoneInput = checkoutForm.querySelector('input[name="phone"]');
 const PHONE_PREFIX = "+380";
+const PHONE_LOCAL_DIGITS = 9;
+
+function getPhoneLocalDigits(value) {
+  const digits = String(value ?? "").replace(/\D/g, "");
+  return (digits.startsWith("380") ? digits.slice(3) : digits).slice(0, PHONE_LOCAL_DIGITS);
+}
 
 function formatPhoneValue(value) {
-  const digits = String(value ?? "").replace(/\D/g, "");
-  const localDigits = digits.startsWith("380") ? digits.slice(3) : digits;
-  return `${PHONE_PREFIX}${localDigits.slice(0, 8)}`;
+  const localDigits = getPhoneLocalDigits(value);
+
+  const part1 = localDigits.slice(0, 2);
+  const part2 = localDigits.slice(2, 5);
+  const part3 = localDigits.slice(5, 7);
+  const part4 = localDigits.slice(7, 9);
+  const parts = [part1, part2, part3, part4].filter(Boolean);
+
+  return parts.length ? `${PHONE_PREFIX} ${parts.join(" ")}` : PHONE_PREFIX;
+}
+
+function getCompactPhone(value) {
+  return `${PHONE_PREFIX}${getPhoneLocalDigits(value)}`;
 }
 
 function normalizePhoneInput() {
@@ -511,15 +527,16 @@ checkoutForm.onsubmit = async e => {
   }
 
   const name = nameInput.value.trim().toUpperCase();
-  const phone = formatPhoneValue(phoneInput.value);
+  const phone = getCompactPhone(phoneInput.value);
+  const prettyPhone = formatPhoneValue(phoneInput.value);
 
-  if (phone.length !== 12) {
-    alert("❌ Введіть 8 цифр телефону після +380");
+  if (phone.length !== 13) {
+    alert("❌ Введіть 9 цифр телефону у форматі +380 XX XXX XX XX");
     return;
   }
 
   nameInput.value = name;
-  phoneInput.value = phone;
+  phoneInput.value = prettyPhone;
 
   const price = Number(selectedTire.price ?? 0);
   const total = price * quantity;
