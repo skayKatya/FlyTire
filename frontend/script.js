@@ -273,7 +273,7 @@ phoneInput.addEventListener("blur", normalizePhoneInput);
 
 function resolveApiBase() {
   const { hostname, port, protocol } = window.location;
-  const isLocalHost = ["localhost", "127.0.0.1"].includes(hostname);
+  const isLocalHost = ["localhost", "127.0.0.1", "0.0.0.0"].includes(hostname);
 
   if (protocol === "file:") return "http://127.0.0.1:3000";
   if (isLocalHost && port !== "3000") return "http://127.0.0.1:3000";
@@ -283,24 +283,40 @@ function resolveApiBase() {
 const API_BASE = resolveApiBase();
 
 function buildApiCandidates() {
-  const candidates = new Set();
-  const { hostname, protocol } = window.location;
+  const candidates = [];
+  const seen = new Set();
+  const { hostname, protocol, port } = window.location;
   const localHosts = [hostname, "127.0.0.1", "localhost", "0.0.0.0"];
+  const isLocalHost = ["localhost", "127.0.0.1", "0.0.0.0"].includes(hostname);
 
-  if (API_BASE) candidates.add(API_BASE);
-  candidates.add("");
+  const addCandidate = (base) => {
+    if (typeof base !== "string") return;
+    const normalized = base.trim();
+    if (seen.has(normalized)) return;
+    seen.add(normalized);
+    candidates.push(normalized);
+  };
 
+  // 1) explicit configuration from URL/query/env
+  if (API_BASE) addCandidate(API_BASE);
+
+  // 2) likely backend hosts (prefer absolute URLs before relative /api)
   if (protocol !== "file:") {
     for (const host of localHosts) {
       if (!host) continue;
-      candidates.add(`${protocol}//${host}:3000`);
+      addCandidate(`${protocol}//${host}:3000`);
     }
   }
 
-  candidates.add("http://127.0.0.1:3000");
-  candidates.add("http://localhost:3000");
+  addCandidate("http://127.0.0.1:3000");
+  addCandidate("http://localhost:3000");
 
-  return [...candidates];
+  // 3) same-origin fallback (e.g. when a reverse proxy exposes /api).
+  // Skip this on local dev ports like :5500 to avoid noisy 405 responses.
+  const shouldTrySameOriginApi = !(isLocalHost && port && port !== "3000");
+  if (shouldTrySameOriginApi) addCandidate("");
+
+  return candidates;
 }
 
 async function readErrorMessage(res) {
