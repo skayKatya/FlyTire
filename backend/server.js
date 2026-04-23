@@ -14,6 +14,7 @@ dotenv.config();
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 const COUNTER_FILE = path.join(__dirname, "orderCounter.json");
+const PRICE_CACHE_FILE = path.join(__dirname, "latestPriceCache.json");
 
 /* ======================
    CONFIG (.env)
@@ -34,11 +35,24 @@ const MAIL_CONFIG = {
   maxMessagesToScan: Number(process.env.IMAP_MAX_MESSAGES_TO_SCAN || 20)
 };
 
+const PRICE_SYNC_CONFIG = {
+  hour: Number(process.env.PRICE_SYNC_HOUR || 5),
+  minute: Number(process.env.PRICE_SYNC_MINUTE || 0),
+  timezone: process.env.PRICE_SYNC_TIMEZONE || "Europe/Kyiv"
+};
+
 /* ======================
    APP INIT
 ====================== */
 const app = express();
 const FRONTEND_DIR = path.join(__dirname, "..", "frontend");
+let cachedPriceData = null;
+const priceSyncState = {
+  isSyncing: false,
+  lastRunDateKey: null,
+  lastSuccessAt: null,
+  lastError: null
+};
 
 /* ======================
    MIDDLEWARE
@@ -264,6 +278,114 @@ function parseExcelAttachment(contentBuffer) {
   };
 }
 
+function getDatePartsInTimeZone(date = new Date(), timezone = "UTC") {
+  const formatter = new Intl.DateTimeFormat("en-CA", {
+    timeZone: timezone,
+    year: "numeric",
+    month: "2-digit",
+    day: "2-digit",
+    hour: "2-digit",
+    minute: "2-digit",
+    hour12: false
+  });
+
+  const parts = formatter.formatToParts(date).reduce((acc, part) => {
+    if (part.type !== "literal") acc[part.type] = part.value;
+    return acc;
+  }, {});
+
+  return {
+    dateKey: `${parts.year}-${parts.month}-${parts.day}`,
+    hour: Number(parts.hour),
+    minute: Number(parts.minute)
+  };
+}
+
+function savePriceCacheToFile(data) {
+  fs.writeFileSync(PRICE_CACHE_FILE, JSON.stringify(data, null, 2), "utf-8");
+}
+
+function loadPriceCacheFromFile() {
+  try {
+    if (!fs.existsSync(PRICE_CACHE_FILE)) return;
+    const raw = fs.readFileSync(PRICE_CACHE_FILE, "utf-8");
+    const parsed = JSON.parse(raw);
+    if (Array.isArray(parsed?.tires)) {
+      cachedPriceData = parsed;
+      priceSyncState.lastSuccessAt = parsed.syncedAt || null;
+    }
+  } catch (error) {
+    console.warn("⚠️ Не вдалося прочитати кеш прайсу з диска:", error.message);
+  }
+}
+
+async function refreshPriceCache(trigger = "manual") {
+  if (priceSyncState.isSyncing) return cachedPriceData;
+  priceSyncState.isSyncing = true;
+
+  try {
+    const emailData = await fetchLatestPriceAttachment();
+    const parsed = parseExcelAttachment(emailData.attachment.content);
+
+    cachedPriceData = {
+      source: "email-xlsx",
+      syncedAt: new Date().toISOString(),
+      trigger,
+      meta: {
+        mailbox: MAIL_CONFIG.mailbox,
+        uid: emailData.uid,
+        subject: emailData.subject,
+        from: emailData.from,
+        date: emailData.date,
+        attachmentName: emailData.attachment.filename,
+        sheetName: parsed.sheetName
+      },
+      tires: parsed.tires
+    };
+
+    savePriceCacheToFile(cachedPriceData);
+    priceSyncState.lastSuccessAt = cachedPriceData.syncedAt;
+    priceSyncState.lastError = null;
+    console.log(`✅ Прайс оновлено (${trigger}): ${cachedPriceData.tires.length} позицій`);
+    return cachedPriceData;
+  } catch (error) {
+    priceSyncState.lastError = error.message;
+    console.error(`❌ PRICE SYNC ERROR (${trigger}):`, error);
+    throw error;
+  } finally {
+    priceSyncState.isSyncing = false;
+  }
+}
+
+function shouldRunScheduledSync(now = new Date()) {
+  const { dateKey, hour, minute } = getDatePartsInTimeZone(now, PRICE_SYNC_CONFIG.timezone);
+  const matchesTime = hour === PRICE_SYNC_CONFIG.hour && minute === PRICE_SYNC_CONFIG.minute;
+  const alreadyRanToday = priceSyncState.lastRunDateKey === dateKey;
+
+  if (!matchesTime || alreadyRanToday) return false;
+
+  priceSyncState.lastRunDateKey = dateKey;
+  return true;
+}
+
+function startPriceSyncScheduler() {
+  const intervalMs = 60 * 1000;
+  console.log(
+    `⏰ Планове оновлення прайсу щодня о ${String(PRICE_SYNC_CONFIG.hour).padStart(2, "0")}:${String(
+      PRICE_SYNC_CONFIG.minute
+    ).padStart(2, "0")} (${PRICE_SYNC_CONFIG.timezone})`
+  );
+
+  setInterval(async () => {
+    if (!shouldRunScheduledSync()) return;
+    try {
+      await refreshPriceCache("scheduled");
+    } catch {
+      // помилку вже залоговано в refreshPriceCache
+    }
+  }, intervalMs);
+}
+
 function ensureMailConfig() {
   const missing = ["host", "user", "pass"].filter(key => !MAIL_CONFIG[key]);
   if (missing.length) {
@@ -362,27 +484,28 @@ async function fetchLatestPriceAttachment() {
    ROUTES
 ====================== */
 app.get("/api/health", (req, res) => {
-  res.json({ status: "OK", service: "FlyTire backend" });
+  res.json({
+    status: "OK",
+    service: "FlyTire backend",
+    priceSync: {
+      lastSuccessAt: priceSyncState.lastSuccessAt,
+      lastError: priceSyncState.lastError,
+      timezone: PRICE_SYNC_CONFIG.timezone,
+      hour: PRICE_SYNC_CONFIG.hour,
+      minute: PRICE_SYNC_CONFIG.minute
+    }
+  });
 });
 
 app.get("/api/tires", async (req, res) => {
   try {
-    const emailData = await fetchLatestPriceAttachment();
-    const parsed = parseExcelAttachment(emailData.attachment.content);
+    const forceRefresh = String(req.query.refresh || "").toLowerCase() === "1";
 
-    res.json({
-      source: "email-xlsx",
-      meta: {
-        mailbox: MAIL_CONFIG.mailbox,
-        uid: emailData.uid,
-        subject: emailData.subject,
-        from: emailData.from,
-        date: emailData.date,
-        attachmentName: emailData.attachment.filename,
-        sheetName: parsed.sheetName
-      },
-      tires: parsed.tires
-    });
+    if (forceRefresh || !cachedPriceData) {
+      await refreshPriceCache(forceRefresh ? "api-force-refresh" : "api-on-demand");
+    }
+
+    res.json(cachedPriceData);
   } catch (error) {
     console.error("❌ TIRES SYNC ERROR:", error);
     res.status(500).json({
@@ -479,6 +602,12 @@ app.get(/.*/, (req, res) => {
    START SERVER
 ====================== */
 const PORT = Number(process.env.PORT) || 3000;
+
+loadPriceCacheFromFile();
+startPriceSyncScheduler();
+refreshPriceCache("startup").catch(() => {
+  console.warn("⚠️ Стартове оновлення прайсу не вдалося. Працюємо з останнім кешем або fallback.");
+});
 
 app.listen(PORT, "0.0.0.0", () => {
   console.log(`✅ FlyTire site+backend: http://127.0.0.1:${PORT}`);
