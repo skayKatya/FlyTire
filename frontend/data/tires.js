@@ -97,9 +97,15 @@ function parseCsvToTires(csvText) {
 }
 
 function resolveApiBase() {
-  const { protocol } = window.location;
+  const { protocol, hostname, port } = window.location;
 
   if (protocol === "file:") return "http://127.0.0.1:3000";
+
+  const isLocalhost = hostname === "127.0.0.1" || hostname === "localhost";
+  if (isLocalhost && port && port !== "3000") {
+    return "http://127.0.0.1:3000";
+  }
+
   return "";
 }
 
