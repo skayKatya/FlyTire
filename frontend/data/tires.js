@@ -138,7 +138,13 @@ export async function loadTires() {
   try {
     return await loadTiresFromApi();
   } catch (error) {
-    console.warn("Не вдалося завантажити прайс з пошти, використовую локальний CSV:", error);
+    const details = error instanceof Error ? error.message : String(error);
+    const isApiMissing = /пошти:\s*404\b/.test(details);
+
+    if (!isApiMissing) {
+      console.warn(`Не вдалося завантажити прайс з пошти, використовую локальний CSV (${details}).`);
+    }
+
     return loadTiresFromCsv();
   }
 }
