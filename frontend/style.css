@@ -125,6 +125,10 @@ body {
   min-width: 190px;
 }
 
+#widthFilter {
+  min-width: 120px;
+}
+
 .apply-btn {
   background: linear-gradient(150deg, var(--accent-start), var(--accent-end));
   color: #fff;
