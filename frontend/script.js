@@ -274,6 +274,7 @@ resetBtn.onclick = () => {
 
 searchInput.addEventListener("input", () => {
   renderBrandSuggestions(searchInput.value);
+  applyFilters();
 });
 
 /* ======================
