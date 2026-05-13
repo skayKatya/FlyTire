@@ -49,3 +49,11 @@ PRICE_SYNC_TIMEZONE=Europe/Kyiv
 - `GET /api/health` — повертає статус сервера + інформацію про останню синхронізацію прайсу.
 
 > Якщо `GET /api/tires` недоступний/падає, фронтенд автоматично використовує локальний `frontend/data/tires.csv` як fallback.
+
+
+## Деплой фронтенду на Netlify
+
+1. Підключи репозиторій у Netlify.
+2. Netlify автоматично підхопить `netlify.toml` і буде публікувати папку `frontend`.
+3. В `netlify.toml` заміни `https://YOUR_BACKEND_DOMAIN` на реальний домен бекенду, щоб `/api/*` проксувалося правильно.
+4. За потреби можна явно вказати API-бекенд у `frontend/config.js` через `API_BASE_OVERRIDE`.
