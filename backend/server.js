@@ -58,11 +58,17 @@ const priceSyncState = {
    MIDDLEWARE
 ====================== */
 const LOCAL_ORIGIN_RE = /^https?:\/\/(localhost|127\.0\.0\.1)(:\d+)?$/;
+const ALLOWED_ORIGINS = String(process.env.ALLOWED_ORIGINS || "")
+  .split(",")
+  .map((origin) => origin.trim())
+  .filter(Boolean);
 
 app.use(
   cors({
     origin: (origin, cb) => {
-      if (!origin || LOCAL_ORIGIN_RE.test(origin)) return cb(null, true);
+      if (!origin || LOCAL_ORIGIN_RE.test(origin) || ALLOWED_ORIGINS.includes(origin)) {
+        return cb(null, true);
+      }
       return cb(new Error(`Not allowed by CORS: ${origin}`));
     },
     methods: ["GET", "POST", "OPTIONS"],

@@ -1,0 +1,44 @@
+services:
+  - type: web
+    name: flytire-backend
+    env: node
+    rootDir: .
+    buildCommand: npm ci
+    startCommand: npm run start:backend
+    autoDeploy: true
+    healthCheckPath: /api/health
+    envVars:
+      - key: NODE_VERSION
+        value: 20
+      - key: PRICE_SYNC_HOUR
+        value: 5
+      - key: PRICE_SYNC_MINUTE
+        value: 0
+      - key: PRICE_SYNC_TIMEZONE
+        value: Europe/Kyiv
+      - key: ALLOWED_ORIGINS
+        sync: false
+      - key: BOT_TOKEN
+        sync: false
+      - key: CHAT_ID
+        sync: false
+      - key: IMAP_HOST
+        sync: false
+      - key: IMAP_PORT
+        sync: false
+      - key: IMAP_SECURE
+        sync: false
+      - key: IMAP_USER
+        sync: false
+      - key: IMAP_PASS
+        sync: false
+      - key: IMAP_MAILBOX
+        sync: false
+      - key: IMAP_SUBJECT_CONTAINS
+        sync: false
+      - key: IMAP_FROM_CONTAINS
+        sync: false
+      - key: IMAP_ATTACHMENT_NAME_CONTAINS
+        sync: false
+      - key: IMAP_MAX_MESSAGES_TO_SCAN
+        sync: false
