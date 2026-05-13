@@ -2,6 +2,7 @@
    DATA
 ====================== */
 import { loadTires } from "./data/tires.js";
+import { API_BASE_OVERRIDE } from "./config.js";
 
 let tires = [];
 
@@ -10,8 +11,26 @@ let tires = [];
 ====================== */
 const gallery = document.getElementById("tireGallery");
 const searchInput = document.getElementById("searchInput");
+const brandSuggestions = document.getElementById("brandSuggestions");
 const seasonFilter = document.getElementById("seasonFilter");
 const radiusFilter = document.getElementById("radiusFilter");
+
+const filtersToggle = document.getElementById("filtersToggle");
+const filtersPanel = document.getElementById("filtersPanel");
+
+function setFiltersMenuState(isOpen) {
+  if (!filtersToggle || !filtersPanel) return;
+  filtersPanel.classList.toggle("is-open", isOpen);
+  filtersToggle.setAttribute("aria-expanded", String(isOpen));
+}
+
+if (filtersToggle && filtersPanel) {
+  filtersToggle.addEventListener("click", () => {
+    const isOpen = !filtersPanel.classList.contains("is-open");
+    setFiltersMenuState(isOpen);
+  });
+}
+
 
 const modal = document.getElementById("checkoutModal");
 const closeModal = document.getElementById("closeModal");
@@ -153,6 +172,31 @@ const inStockFilter = document.getElementById("inStockFilter");
 const applyBtn = document.getElementById("applyFilters");
 const resetBtn = document.getElementById("resetFilters");
 const resultsCount = document.getElementById("resultsCount");
+let availableBrands = [];
+
+function collectBrands(items) {
+  return [...new Set(items.map(tire => String(tire.brand ?? "").trim()).filter(Boolean))]
+    .sort((a, b) => a.localeCompare(b, "uk"));
+}
+
+function renderBrandSuggestions(query) {
+  if (!brandSuggestions) return;
+
+  const normalized = String(query ?? "").trim().toLowerCase();
+  brandSuggestions.innerHTML = "";
+
+  if (!normalized) return;
+
+  const matches = availableBrands
+    .filter(brand => brand.toLowerCase().startsWith(normalized))
+    .slice(0, 20);
+
+  matches.forEach(brand => {
+    const option = document.createElement("option");
+    option.value = brand;
+    brandSuggestions.appendChild(option);
+  });
+}
 
 function getSeasonStats(items) {
   return items.reduce(
@@ -212,7 +256,10 @@ function applyFilters() {
   renderTires(filtered);
 }
 
-applyBtn.addEventListener("click", applyFilters);
+applyBtn.addEventListener("click", () => {
+  applyFilters();
+  if (window.innerWidth <= 920) setFiltersMenuState(false);
+});
 
 resetBtn.onclick = () => {
   document
@@ -220,8 +267,14 @@ resetBtn.onclick = () => {
     .forEach(el => (el.value = ""));
   inStockFilter.checked = false;
   resultsCount.textContent = "Параметри очищено. Показано всі шини.";
+  renderBrandSuggestions("");
   renderTires(tires);
+  if (window.innerWidth <= 920) setFiltersMenuState(false);
 };
+
+searchInput.addEventListener("input", () => {
+  renderBrandSuggestions(searchInput.value);
+});
 
 /* ======================
    CHECKOUT MODAL
@@ -272,6 +325,10 @@ phoneInput.addEventListener("input", normalizePhoneInput);
 phoneInput.addEventListener("blur", normalizePhoneInput);
 
 function resolveApiBase() {
+  if (typeof API_BASE_OVERRIDE === "string" && API_BASE_OVERRIDE.trim()) {
+    return API_BASE_OVERRIDE.trim().replace(/\/$/, "");
+  }
+
   const { hostname, port, protocol } = window.location;
   const isLocalHost = ["localhost", "127.0.0.1", "0.0.0.0"].includes(hostname);
 
@@ -605,6 +662,7 @@ checkoutForm.onsubmit = async e => {
 async function initApp() {
   try {
     tires = await loadTires();
+    availableBrands = collectBrands(tires);
     renderTires(tires);
     resultsCount.textContent = `Завантажено моделей: ${tires.length}`;
   } catch (error) {

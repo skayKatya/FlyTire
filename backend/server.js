@@ -58,11 +58,17 @@ const priceSyncState = {
    MIDDLEWARE
 ====================== */
 const LOCAL_ORIGIN_RE = /^https?:\/\/(localhost|127\.0\.0\.1)(:\d+)?$/;
+const ALLOWED_ORIGINS = String(process.env.ALLOWED_ORIGINS || "")
+  .split(",")
+  .map((origin) => origin.trim())
+  .filter(Boolean);
 
 app.use(
   cors({
     origin: (origin, cb) => {
-      if (!origin || LOCAL_ORIGIN_RE.test(origin)) return cb(null, true);
+      if (!origin || LOCAL_ORIGIN_RE.test(origin) || ALLOWED_ORIGINS.includes(origin)) {
+        return cb(null, true);
+      }
       return cb(new Error(`Not allowed by CORS: ${origin}`));
     },
     methods: ["GET", "POST", "OPTIONS"],
@@ -186,11 +192,13 @@ function detectSeason(description, sectionSeason) {
 function parseTireLine(description, priceRaw, quantityRaw, sectionSeason) {
   if (!description || /^radius\s+\d+/i.test(description)) return null;
 
-  const sizeMatch = description.match(/(\d{2,3})\/(\d{2,3})\s*R(\d{2})/i);
+  const sizeMatch = description.match(/(\d{2,3})\/(\d{2,3})\s*(?:ZR|R)(\d{2})/i);
   if (!sizeMatch) return null;
 
   const [, width, profile, radius] = sizeMatch;
-  const loadIndexMatch = description.match(/\bR\d{2}[A-Z]?\s+([0-9]{2,3}(?:\/[0-9]{2,3})?[A-Z]{0,2})/i);
+  const loadIndexMatch = description.match(
+    /\b(?:ZR|R)\d{2}[A-Z]?\s+([0-9]{2,3}(?:\/[0-9]{2,3})?[A-Z]{0,2})/i
+  );
 
   const cleaned = description
     .replace(/\(.*?\)/g, "")

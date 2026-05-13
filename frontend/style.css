@@ -34,10 +34,10 @@ body {
 
 .header-contacts {
   position: absolute;
-  bottom: 16px;
-  left: 16px;
+  bottom: 8px;
+  left: 8px;
   display: block;
-  padding: 8px 12px;
+  padding: 6px 10px;
   border-radius: 12px;
   background: rgba(0, 0, 0, .42);
   backdrop-filter: blur(4px);
@@ -68,7 +68,7 @@ body {
 
 .hero h1 {
   position: absolute;
-  top: 20%;
+  top: 17%;
   left: 50%;
   transform: translate(-50%, -50%);
   margin: 0;
@@ -123,6 +123,10 @@ body {
 
 #searchInput {
   min-width: 190px;
+}
+
+#widthFilter {
+  min-width: 120px;
 }
 
 .apply-btn {
@@ -490,25 +494,125 @@ body {
 .footer-container {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-  gap: 30px;
+  gap: 14px;
   max-width: 1100px;
   margin: auto;
 }
 
 .footer-section h3 {
-  margin-bottom: 10px;
+  margin-bottom: 6px;
   font-size: 18px;
 }
 
 .footer-section p {
-  margin: 5px 0;
+  margin: 2px 0;
   font-size: 14px;
   opacity: 0.85;
 }
 
 .footer-bottom {
   text-align: center;
-  margin-top: 30px;
+  margin-top: 16px;
   font-size: 13px;
   opacity: 0.6;
+}
+
+.filters-wrapper {
+  max-width: 1240px;
+  margin: 18px auto 0;
+  padding: 0 8px;
+}
+
+.filters-toggle {
+  display: none;
+  width: 100%;
+  height: 42px;
+  border: 1px solid #e0e0e0;
+  border-radius: 10px;
+  background: #fff;
+  font-size: 15px;
+  font-weight: 700;
+  color: #333;
+}
+
+@media (max-width: 920px) {
+  .hero {
+    min-height: 62vh;
+    padding: 70px 14px;
+  }
+
+  .logo {
+    width: 170px;
+  }
+
+  .hero h1 {
+    top: 34%;
+    font-size: clamp(22px, 5vw, 30px);
+    line-height: 1.25;
+  }
+
+  .header-contacts {
+    position: absolute;
+    bottom: 8px;
+    left: 8px;
+    margin-top: 0;
+    width: fit-content;
+    max-width: 100%;
+  }
+
+  .filters-wrapper {
+    margin-top: 12px;
+    padding: 0 10px;
+  }
+
+  .filters-toggle {
+    display: block;
+  }
+
+  .filters {
+    display: none;
+    flex-direction: column;
+    align-items: stretch;
+    gap: 10px;
+    margin: 10px 0 0;
+    max-width: 100%;
+    overflow: visible;
+  }
+
+  .filters.is-open {
+    display: flex;
+  }
+
+  .filters input,
+  .filters select,
+  .apply-btn,
+  .reset-btn,
+  .in-stock {
+    width: 100%;
+    min-width: 0;
+    height: 42px;
+    font-size: 14px;
+  }
+
+  .in-stock {
+    justify-content: center;
+  }
+
+  .gallery-sections {
+    padding: 14px;
+  }
+
+  .tire-list {
+    grid-template-columns: 1fr;
+    gap: 14px;
+  }
+
+  .season-header {
+    font-size: 18px;
+    margin-top: 18px;
+  }
+
+  .card img {
+    height: 160px;
+  }
 }

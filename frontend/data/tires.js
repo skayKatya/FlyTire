@@ -1,3 +1,5 @@
+import { API_BASE_OVERRIDE } from "../config.js";
+
 const CSV_PATH = "./data/tires.csv";
 const DEFAULT_IMAGE = "./images/landingPage/flytire-vector.png";
 
@@ -97,12 +99,19 @@ function parseCsvToTires(csvText) {
 }
 
 function resolveApiBase() {
-  const { protocol } = window.location;
+  if (typeof API_BASE_OVERRIDE === "string" && API_BASE_OVERRIDE.trim()) {
+    return API_BASE_OVERRIDE.trim().replace(/\/$/, "");
+  }
 
-  // For local file previews, use the local backend explicitly.
+  const { protocol, hostname, port } = window.location;
+
   if (protocol === "file:") return "http://127.0.0.1:3000";
 
-  // In all hosted/dev-server cases, prefer same-origin API path.
+  const isLocalhost = hostname === "127.0.0.1" || hostname === "localhost";
+  if (isLocalhost && port && port !== "3000") {
+    return "http://127.0.0.1:3000";
+  }
+
   return "";
 }
 
@@ -138,13 +147,7 @@ export async function loadTires() {
   try {
     return await loadTiresFromApi();
   } catch (error) {
-    const details = error instanceof Error ? error.message : String(error);
-    const isApiMissing = /пошти:\s*404\b/.test(details);
-
-    if (!isApiMissing) {
-      console.warn(`Не вдалося завантажити прайс з пошти, використовую локальний CSV (${details}).`);
-    }
-
+    console.warn("Не вдалося завантажити прайс з пошти, використовую локальний CSV:", error);
     return loadTiresFromCsv();
   }
 }

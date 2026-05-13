@@ -39,12 +39,24 @@
 </header>
 
 <!-- FILTERS -->
-<section class="filters">
+<section class="filters-wrapper">
+  <button id="filtersToggle" class="filters-toggle" type="button" aria-expanded="false" aria-controls="filtersPanel">
+    ☰ Фільтри
+  </button>
 
-  <input id="searchInput" type="text" placeholder="🔍 Бренд">
+  <section class="filters" id="filtersPanel">
+
+  <input id="searchInput" type="text" placeholder="🔍 Бренд" list="brandSuggestions" autocomplete="off">
+  <datalist id="brandSuggestions"></datalist>
 
   <select id="widthFilter">
     <option value="">Ширина</option>
+    <option value="100">100</option>
+    <option value="110">110</option>
+    <option value="120">120</option>
+    <option value="130">130</option>
+    <option value="140">140</option>
+    <option value="150">150</option>
     <option value="155">155</option>
     <option value="165">165</option>
     <option value="175">175</option>
@@ -105,6 +117,7 @@
 
   <button id="resetFilters" class="reset-btn">Очистити</button>
 
+</section>
 </section>
 
 <p id="resultsCount" class="results-count"></p>
