@@ -39,7 +39,12 @@
 </header>
 
 <!-- FILTERS -->
-<section class="filters">
+<section class="filters-wrapper">
+  <button id="filtersToggle" class="filters-toggle" type="button" aria-expanded="false" aria-controls="filtersPanel">
+    ☰ Фільтри
+  </button>
+
+  <section class="filters" id="filtersPanel">
 
   <input id="searchInput" type="text" placeholder="🔍 Бренд">
 
@@ -105,6 +110,7 @@
 
   <button id="resetFilters" class="reset-btn">Очистити</button>
 
+</section>
 </section>
 
 <p id="resultsCount" class="results-count"></p>
