@@ -185,11 +185,18 @@ function renderBrandSuggestions(query) {
   const normalized = String(query ?? "").trim().toLowerCase();
   brandSuggestions.innerHTML = "";
 
-  if (!normalized) return;
+  if (normalized.length < 1) return;
 
-  const matches = availableBrands
-    .filter(brand => brand.toLowerCase().startsWith(normalized))
-    .slice(0, 20);
+  const startsWithMatches = availableBrands.filter(brand =>
+    brand.toLowerCase().startsWith(normalized)
+  );
+  const includesMatches = availableBrands.filter(
+    brand =>
+      !brand.toLowerCase().startsWith(normalized) &&
+      brand.toLowerCase().includes(normalized)
+  );
+
+  const matches = [...startsWithMatches, ...includesMatches].slice(0, 20);
 
   matches.forEach(brand => {
     const option = document.createElement("option");
