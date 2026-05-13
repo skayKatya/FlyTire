@@ -17,6 +17,9 @@ cp backend/.env.example backend/.env
 ```env
 PORT=3000
 
+# CORS (дозволені домени фронтенду, через кому)
+ALLOWED_ORIGINS=https://your-netlify-site.netlify.app
+
 # Telegram (для замовлень)
 BOT_TOKEN=...
 CHAT_ID=...
@@ -51,9 +54,20 @@ PRICE_SYNC_TIMEZONE=Europe/Kyiv
 > Якщо `GET /api/tires` недоступний/падає, фронтенд автоматично використовує локальний `frontend/data/tires.csv` як fallback.
 
 
+## Деплой бекенду на Render
+
+1. Перейди у Render Dashboard: https://dashboard.render.com/.
+2. Створи `New +` → `Web Service` і підключи цей репозиторій.
+3. Render автоматично підхопить `render.yaml` (Blueprint) або задай вручну:
+   - **Build Command:** `npm ci`
+   - **Start Command:** `npm run start:backend`
+   - **Health Check Path:** `/api/health`
+4. Додай всі змінні оточення з секції вище (`BOT_TOKEN`, `CHAT_ID`, IMAP-налаштування, `ALLOWED_ORIGINS` тощо).
+5. Після деплою скопіюй URL сервісу Render (наприклад, `https://flytire-backend.onrender.com`).
+
 ## Деплой фронтенду на Netlify
 
 1. Підключи репозиторій у Netlify.
 2. Netlify автоматично підхопить `netlify.toml` і буде публікувати папку `frontend`.
-3. В `netlify.toml` заміни `https://YOUR_BACKEND_DOMAIN` на реальний домен бекенду, щоб `/api/*` проксувалося правильно.
+3. В `netlify.toml` заміни `https://YOUR_BACKEND_DOMAIN` на URL бекенду Render, щоб `/api/*` проксувалося правильно.
 4. За потреби можна явно вказати API-бекенд у `frontend/config.js` через `API_BASE_OVERRIDE`.
