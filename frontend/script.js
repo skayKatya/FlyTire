@@ -2,6 +2,7 @@
    DATA
 ====================== */
 import { loadTires } from "./data/tires.js";
+import { API_BASE_OVERRIDE } from "./config.js";
 
 let tires = [];
 
@@ -272,6 +273,10 @@ phoneInput.addEventListener("input", normalizePhoneInput);
 phoneInput.addEventListener("blur", normalizePhoneInput);
 
 function resolveApiBase() {
+  if (typeof API_BASE_OVERRIDE === "string" && API_BASE_OVERRIDE.trim()) {
+    return API_BASE_OVERRIDE.trim().replace(/\/$/, "");
+  }
+
   const { hostname, port, protocol } = window.location;
   const isLocalHost = ["localhost", "127.0.0.1", "0.0.0.0"].includes(hostname);
 
