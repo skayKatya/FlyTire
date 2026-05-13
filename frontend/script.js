@@ -11,6 +11,7 @@ let tires = [];
 ====================== */
 const gallery = document.getElementById("tireGallery");
 const searchInput = document.getElementById("searchInput");
+const brandSuggestions = document.getElementById("brandSuggestions");
 const seasonFilter = document.getElementById("seasonFilter");
 const radiusFilter = document.getElementById("radiusFilter");
 
@@ -171,6 +172,31 @@ const inStockFilter = document.getElementById("inStockFilter");
 const applyBtn = document.getElementById("applyFilters");
 const resetBtn = document.getElementById("resetFilters");
 const resultsCount = document.getElementById("resultsCount");
+let availableBrands = [];
+
+function collectBrands(items) {
+  return [...new Set(items.map(tire => String(tire.brand ?? "").trim()).filter(Boolean))]
+    .sort((a, b) => a.localeCompare(b, "uk"));
+}
+
+function renderBrandSuggestions(query) {
+  if (!brandSuggestions) return;
+
+  const normalized = String(query ?? "").trim().toLowerCase();
+  brandSuggestions.innerHTML = "";
+
+  if (!normalized) return;
+
+  const matches = availableBrands
+    .filter(brand => brand.toLowerCase().startsWith(normalized))
+    .slice(0, 20);
+
+  matches.forEach(brand => {
+    const option = document.createElement("option");
+    option.value = brand;
+    brandSuggestions.appendChild(option);
+  });
+}
 
 function getSeasonStats(items) {
   return items.reduce(
@@ -241,9 +267,14 @@ resetBtn.onclick = () => {
     .forEach(el => (el.value = ""));
   inStockFilter.checked = false;
   resultsCount.textContent = "Параметри очищено. Показано всі шини.";
+  renderBrandSuggestions("");
   renderTires(tires);
   if (window.innerWidth <= 920) setFiltersMenuState(false);
 };
+
+searchInput.addEventListener("input", () => {
+  renderBrandSuggestions(searchInput.value);
+});
 
 /* ======================
    CHECKOUT MODAL
@@ -631,6 +662,7 @@ checkoutForm.onsubmit = async e => {
 async function initApp() {
   try {
     tires = await loadTires();
+    availableBrands = collectBrands(tires);
     renderTires(tires);
     resultsCount.textContent = `Завантажено моделей: ${tires.length}`;
   } catch (error) {
