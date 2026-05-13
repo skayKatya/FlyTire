@@ -14,6 +14,23 @@ const searchInput = document.getElementById("searchInput");
 const seasonFilter = document.getElementById("seasonFilter");
 const radiusFilter = document.getElementById("radiusFilter");
 
+const filtersToggle = document.getElementById("filtersToggle");
+const filtersPanel = document.getElementById("filtersPanel");
+
+function setFiltersMenuState(isOpen) {
+  if (!filtersToggle || !filtersPanel) return;
+  filtersPanel.classList.toggle("is-open", isOpen);
+  filtersToggle.setAttribute("aria-expanded", String(isOpen));
+}
+
+if (filtersToggle && filtersPanel) {
+  filtersToggle.addEventListener("click", () => {
+    const isOpen = !filtersPanel.classList.contains("is-open");
+    setFiltersMenuState(isOpen);
+  });
+}
+
+
 const modal = document.getElementById("checkoutModal");
 const closeModal = document.getElementById("closeModal");
 const checkoutForm = document.getElementById("checkoutForm");
@@ -213,7 +230,10 @@ function applyFilters() {
   renderTires(filtered);
 }
 
-applyBtn.addEventListener("click", applyFilters);
+applyBtn.addEventListener("click", () => {
+  applyFilters();
+  if (window.innerWidth <= 920) setFiltersMenuState(false);
+});
 
 resetBtn.onclick = () => {
   document
@@ -222,6 +242,7 @@ resetBtn.onclick = () => {
   inStockFilter.checked = false;
   resultsCount.textContent = "Параметри очищено. Показано всі шини.";
   renderTires(tires);
+  if (window.innerWidth <= 920) setFiltersMenuState(false);
 };
 
 /* ======================
