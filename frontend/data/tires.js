@@ -98,6 +98,32 @@ function parseCsvToTires(csvText) {
   return parsed;
 }
 
+
+function normalizeSeasonFromApi(tire = {}) {
+  const seasonRaw = String(tire.season ?? "").trim().toLowerCase();
+  const seasonMap = {
+    winter: "winter",
+    "зима": "winter",
+    summer: "summer",
+    "літо": "summer",
+    "all-season": "all-season",
+    allseason: "all-season",
+    "all season": "all-season",
+    "всесезон": "all-season",
+    moto: "moto",
+    motorcycle: "moto",
+    "мото": "moto"
+  };
+
+  if (seasonMap[seasonRaw]) return seasonMap[seasonRaw];
+
+  const description = [tire.description, tire.brand, tire.model, tire.name]
+    .map(value => String(value ?? ""))
+    .join(" ");
+
+  return detectSeason(description, seasonRaw);
+}
+
 function resolveApiBase() {
   if (typeof API_BASE_OVERRIDE === "string" && API_BASE_OVERRIDE.trim()) {
     return API_BASE_OVERRIDE.trim().replace(/\/$/, "");
@@ -129,6 +155,7 @@ async function loadTiresFromApi() {
 
   return payload.tires.map(tire => ({
     ...tire,
+    season: normalizeSeasonFromApi(tire),
     image: tire.image || DEFAULT_IMAGE
   }));
 }
